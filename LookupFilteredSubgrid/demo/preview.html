@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lookup Filtered Subgrid — Preview</title>
+    <link rel="stylesheet" href="../LookupFilteredSubgrid/css/LookupFilteredSubgrid.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #eef1f5;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 8px;
+      }
+      .hint {
+        color: #5b6775;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      #mount {
+        max-width: 960px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Lookup Filtered Subgrid — local UI preview</h1>
+    <p class="hint">
+      Static preview of the grid chrome (not the full PCF runtime). Use
+      <code>npm start</code> harness at localhost:8181 for the real control + demo data.
+    </p>
+    <div id="mount" class="lfs-host"></div>
+    <script type="module">
+      import { GridView } from "../out/controls/LookupFilteredSubgrid/bundle.js";
+    </script>
+    <script>
+      // Plain DOM preview without PCF runtime
+      const mount = document.getElementById("mount");
+      const config = {
+        displayColumns: ["fc_name", "createdon"],
+        enableCreate: true,
+        enableEdit: true,
+        enableDelete: true,
+      };
+
+      // Inline minimal render matching GridView markup for guaranteed preview
+      mount.innerHTML = `
+        <div class="lfs-root">
+          <div class="lfs-toolbar">
+            <div class="lfs-title">Related records</div>
+            <div class="lfs-toolbar-actions">
+              <button type="button" class="lfs-btn lfs-btn-secondary">Refresh</button>
+              <button type="button" class="lfs-btn lfs-btn-primary">New</button>
+            </div>
+          </div>
+          <div class="lfs-error">Demo preview — sample AKA rows for Applicant2 lookup.</div>
+          <div class="lfs-table-wrap">
+            <table class="lfs-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Createdon</th>
+                  <th class="lfs-actions-col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Sample AKA 1</td>
+                  <td>2026-07-21</td>
+                  <td class="lfs-actions-col">
+                    <button type="button" class="lfs-btn lfs-btn-link">Edit</button>
+                    <button type="button" class="lfs-btn lfs-btn-link lfs-btn-danger">Delete</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Sample AKA 2</td>
+                  <td>2026-07-20</td>
+                  <td class="lfs-actions-col">
+                    <button type="button" class="lfs-btn lfs-btn-link">Edit</button>
+                    <button type="button" class="lfs-btn lfs-btn-link lfs-btn-danger">Delete</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Sample AKA 3</td>
+                  <td>2026-07-19</td>
+                  <td class="lfs-actions-col">
+                    <button type="button" class="lfs-btn lfs-btn-link">Edit</button>
+                    <button type="button" class="lfs-btn lfs-btn-link lfs-btn-danger">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="lfs-pager">
+            <button type="button" class="lfs-btn lfs-btn-secondary" disabled>Previous</button>
+            <span class="lfs-pager-info">Page 1</span>
+            <button type="button" class="lfs-btn lfs-btn-secondary" disabled>Next</button>
+          </div>
+        </div>`;
+    </script>
+  </body>
+</html>

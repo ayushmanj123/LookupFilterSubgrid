@@ -11,6 +11,31 @@ export interface ControlConfig {
   enableEdit: boolean;
   enableDelete: boolean;
   orderBy: string;
+  useDemoData: boolean;
+}
+
+export function getMissingConfigFields(config: ControlConfig): string[] {
+  const missing: string[] = [];
+  if (!config.lookupFieldLogicalName) missing.push("lookupFieldLogicalName");
+  if (!config.targetEntityLogicalName) missing.push("targetEntityLogicalName");
+  if (!config.filterAttributeLogicalName) missing.push("filterAttributeLogicalName");
+  if (!config.filterLookupEntitySetName) missing.push("filterLookupEntitySetName");
+  if (!config.displayColumns.length) missing.push("displayColumns");
+  if (!config.primaryNameAttribute) missing.push("primaryNameAttribute");
+  return missing;
+}
+
+export function createDemoRecords(config: ControlConfig): EntityRecord[] {
+  const nameCol = config.primaryNameAttribute || "name";
+  const cols = config.displayColumns.length ? config.displayColumns : [nameCol];
+  return [1, 2, 3].map((n) => {
+    const row: EntityRecord = { id: `00000000-0000-0000-0000-00000000000${n}` };
+    for (const col of cols) {
+      row[col] = col === nameCol ? `Sample ${n}` : `Value ${n}`;
+    }
+    row[nameCol] = `Sample AKA ${n}`;
+    return row;
+  });
 }
 
 export interface EntityRecord {

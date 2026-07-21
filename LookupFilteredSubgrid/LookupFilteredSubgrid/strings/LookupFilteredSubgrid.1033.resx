@@ -135,4 +135,10 @@
   <data name="OrderBy_Desc_Key" xml:space="preserve">
     <value>Optional OData $orderby clause (e.g. createdon desc).</value>
   </data>
+  <data name="UseDemoData_Display_Key" xml:space="preserve">
+    <value>Use Demo Data</value>
+  </data>
+  <data name="UseDemoData_Desc_Key" xml:space="preserve">
+    <value>When true, shows sample rows without calling Web API (for local harness / UI preview).</value>
+  </data>
 </root>

@@ -1,3 +1,20 @@
+.lfs-host {
+  min-height: 180px;
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+
+.lfs-fatal {
+  background: #fde7e9;
+  color: #a4262c;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+}
+
 .lfs-root {
   --lfs-bg: #f7f8fa;
   --lfs-surface: #ffffff;

@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Zerodha.PCF" constructor="LookupFilteredSubgrid" version="1.0.0" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
+  <control namespace="Zerodha.PCF" constructor="LookupFilteredSubgrid" version="1.0.1" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
     <external-service-usage enabled="false" />
     <property name="value" display-name-key="Value_Display_Key" description-key="Value_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" />
     <property name="lookupFieldLogicalName" display-name-key="LookupField_Display_Key" description-key="LookupField_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="targetEntityLogicalName" display-name-key="TargetEntity_Display_Key" description-key="TargetEntity_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="filterAttributeLogicalName" display-name-key="FilterAttribute_Display_Key" description-key="FilterAttribute_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="filterLookupEntitySetName" display-name-key="FilterLookupEntitySet_Display_Key" description-key="FilterLookupEntitySet_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
-    <property name="displayColumns" display-name-key="DisplayColumns_Display_Key" description-key="DisplayColumns_Desc_Key" of-type="Multiple" usage="input" required="true" />
+    <property name="displayColumns" display-name-key="DisplayColumns_Display_Key" description-key="DisplayColumns_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="primaryNameAttribute" display-name-key="PrimaryName_Display_Key" description-key="PrimaryName_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="pageSize" display-name-key="PageSize_Display_Key" description-key="PageSize_Desc_Key" of-type="Whole.None" usage="input" required="false" default-value="10" />
     <property name="enableCreate" display-name-key="EnableCreate_Display_Key" description-key="EnableCreate_Desc_Key" of-type="TwoOptions" usage="input" required="false" default-value="true" />
     <property name="enableEdit" display-name-key="EnableEdit_Display_Key" description-key="EnableEdit_Desc_Key" of-type="TwoOptions" usage="input" required="false" default-value="true" />
     <property name="enableDelete" display-name-key="EnableDelete_Display_Key" description-key="EnableDelete_Desc_Key" of-type="TwoOptions" usage="input" required="false" default-value="true" />
     <property name="orderBy" display-name-key="OrderBy_Display_Key" description-key="OrderBy_Desc_Key" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="useDemoData" display-name-key="UseDemoData_Display_Key" description-key="UseDemoData_Desc_Key" of-type="TwoOptions" usage="input" required="false" default-value="false" />
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/LookupFilteredSubgrid.css" order="1" />

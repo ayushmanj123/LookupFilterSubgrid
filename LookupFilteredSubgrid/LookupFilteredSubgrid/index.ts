@@ -6,7 +6,9 @@ import { DataService } from "./services/DataService";
 import { LookupResolver } from "./services/LookupResolver";
 import {
   ControlConfig,
+  createDemoRecords,
   EntityRecord,
+  getMissingConfigFields,
   parseBooleanInput,
   parseDisplayColumns,
   RecordFormValues,
@@ -22,6 +24,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private grid: GridView | null = null;
   private emptyState: EmptyState | null = null;
   private recordForm: RecordForm | null = null;
+  private fatalEl: HTMLDivElement | null = null;
 
   private config: ControlConfig | null = null;
   private filterGuid: string | null = null;
@@ -39,45 +42,67 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     _state: ComponentFramework.Dictionary,
     container: HTMLDivElement
   ): void {
-    this.context = context;
-    this.notifyOutputChanged = notifyOutputChanged;
-    this.container = container;
-    this.container.classList.add("lfs-host");
+    try {
+      this.context = context;
+      this.notifyOutputChanged = notifyOutputChanged;
+      this.container = container;
+      this.container.classList.add("lfs-host");
+      this.container.style.minHeight = "180px";
+      this.container.style.width = "100%";
+      this.container.style.display = "block";
 
-    this.hideNativeHostInput();
+      try {
+        context.mode.trackContainerResize(true);
+      } catch {
+        // Optional on some hosts
+      }
 
-    this.dataService = new DataService(context.webAPI);
+      this.hideNativeHostInput();
 
-    this.emptyState = new EmptyState(this.container);
-    this.grid = new GridView(this.container, {
-      onCreate: () => this.openCreate(),
-      onEdit: (record) => this.openEdit(record),
-      onDelete: (record) => void this.handleDelete(record),
-      onPrevPage: () => void this.goToPage(this.pageNumber - 1),
-      onNextPage: () => void this.goToPage(this.pageNumber + 1),
-      onRefresh: () => void this.reload(),
-    });
+      this.dataService = new DataService(context.webAPI);
 
-    this.recordForm = new RecordForm(this.container, {
-      onSubmit: (values) => void this.handleFormSubmit(values),
-      onCancel: () => this.recordForm?.close(),
-    });
+      this.emptyState = new EmptyState(this.container);
+      this.grid = new GridView(this.container, {
+        onCreate: () => this.openCreate(),
+        onEdit: (record) => this.openEdit(record),
+        onDelete: (record) => void this.handleDelete(record),
+        onPrevPage: () => void this.goToPage(this.pageNumber - 1),
+        onNextPage: () => void this.goToPage(this.pageNumber + 1),
+        onRefresh: () => void this.reload(),
+      });
 
-    this.applyConfig(context);
-    this.setupLookupWatch();
-    void this.reload();
+      this.recordForm = new RecordForm(this.container, {
+        onSubmit: (values) => void this.handleFormSubmit(values),
+        onCancel: () => this.recordForm?.close(),
+      });
+
+      this.applyConfig(context);
+      this.setupLookupWatch();
+      void this.reload();
+    } catch (err) {
+      this.showFatal(this.errorMessage(err, "Control failed to initialize."));
+    }
   }
 
   public updateView(context: ComponentFramework.Context<IInputs>): void {
-    this.context = context;
-    this.applyConfig(context);
+    try {
+      this.context = context;
+      this.applyConfig(context);
 
-    const lookupField = this.config?.lookupFieldLogicalName || "";
-    if (lookupField !== this.lastLookupField) {
-      this.setupLookupWatch();
+      const height = context.mode.allocatedHeight;
+      if (height && height > 0) {
+        this.container.style.minHeight = `${height}px`;
+      }
+
+      const lookupField = this.config?.lookupFieldLogicalName || "";
+      if (lookupField !== this.lastLookupField) {
+        this.setupLookupWatch();
+      }
+
+      void this.reload();
+    } catch (err) {
+      this.showFatal(this.errorMessage(err, "Control update failed."));
     }
-
-    void this.reload();
   }
 
   public getOutputs(): IOutputs {
@@ -91,14 +116,17 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.grid?.destroy();
     this.emptyState?.destroy();
     this.recordForm?.destroy();
+    this.fatalEl?.remove();
     this.grid = null;
     this.emptyState = null;
     this.recordForm = null;
     this.dataService = null;
+    this.fatalEl = null;
   }
 
   private applyConfig(context: ComponentFramework.Context<IInputs>): void {
     const p = context.parameters;
+    const useDemoExplicit = parseBooleanInput(p.useDemoData?.raw, false);
     this.config = {
       lookupFieldLogicalName: (p.lookupFieldLogicalName.raw || "").trim(),
       targetEntityLogicalName: (p.targetEntityLogicalName.raw || "").trim(),
@@ -111,7 +139,17 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       enableEdit: parseBooleanInput(p.enableEdit.raw, true),
       enableDelete: parseBooleanInput(p.enableDelete.raw, true),
       orderBy: (p.orderBy.raw || "").trim(),
+      useDemoData: useDemoExplicit || this.isLocalHarness(),
     };
+  }
+
+  private isLocalHarness(): boolean {
+    try {
+      const host = window.location.hostname;
+      return host === "localhost" || host === "127.0.0.1";
+    } catch {
+      return false;
+    }
   }
 
   private setupLookupWatch(): void {
@@ -135,19 +173,42 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   }
 
   private async reload(): Promise<void> {
-    if (!this.config || !this.dataService || !this.grid || !this.emptyState) {
+    if (!this.config || !this.grid || !this.emptyState) {
       return;
     }
 
     const config = this.config;
     this.grid.setError(null);
 
-    if (!this.validateConfig(config)) {
+    const missing = getMissingConfigFields(config);
+    // In local harness / demo mode, fill safe defaults so UI is visible
+    if (config.useDemoData && missing.length) {
+      this.applyDemoDefaults(config);
+    }
+
+    const stillMissing = getMissingConfigFields(config);
+    if (stillMissing.length) {
       this.grid.setLoading(false);
       this.grid.setVisible(false);
       this.emptyState.show(
-        "Configure the control properties: lookup field, target entity, filter attribute, entity set, and display columns."
+        `PCF is loaded, but these properties are empty: ${stillMissing.join(
+          ", "
+        )}. Set them on the form component (model-driven form designer), then enable the custom component on Power Pages.`
       );
+      return;
+    }
+
+    if (config.useDemoData) {
+      this.filterGuid = this.filterGuid || "11111111-1111-1111-1111-111111111111";
+      this.emptyState.hide();
+      this.grid.setVisible(true);
+      this.records = createDemoRecords(config);
+      this.hasNextPage = false;
+      this.grid.setLoading(false);
+      this.grid.setError(
+        "Demo data mode — sample rows only. Turn off Use Demo Data / open on Power Pages for live Web API."
+      );
+      this.grid.render(config, this.records, 1, false, "No demo records.");
       return;
     }
 
@@ -160,8 +221,13 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.grid.setLoading(false);
       this.grid.setVisible(false);
       this.emptyState.show(
-        "Select a value in the lookup field to load related records."
+        `Select a value in lookup "${config.lookupFieldLogicalName}" to load related ${config.targetEntityLogicalName} records.`
       );
+      return;
+    }
+
+    if (!this.dataService) {
+      this.emptyState.show("Web API is not available in this host.");
       return;
     }
 
@@ -187,7 +253,9 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       );
     } catch (err) {
       const message = this.errorMessage(err, "Failed to load related records.");
-      this.grid.setError(message);
+      this.grid.setError(
+        `${message} Check Power Pages Web API site settings and table permissions for "${config.targetEntityLogicalName}".`
+      );
       this.grid.render(config, [], this.pageNumber, false, "Unable to load records.");
     } finally {
       this.isLoading = false;
@@ -195,15 +263,13 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     }
   }
 
-  private validateConfig(config: ControlConfig): boolean {
-    return !!(
-      config.lookupFieldLogicalName &&
-      config.targetEntityLogicalName &&
-      config.filterAttributeLogicalName &&
-      config.filterLookupEntitySetName &&
-      config.displayColumns.length > 0 &&
-      config.primaryNameAttribute
-    );
+  private applyDemoDefaults(config: ControlConfig): void {
+    if (!config.lookupFieldLogicalName) config.lookupFieldLogicalName = "applicant2";
+    if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "fc_akaname";
+    if (!config.filterAttributeLogicalName) config.filterAttributeLogicalName = "fc_contact";
+    if (!config.filterLookupEntitySetName) config.filterLookupEntitySetName = "contacts";
+    if (!config.displayColumns.length) config.displayColumns = ["fc_name", "createdon"];
+    if (!config.primaryNameAttribute) config.primaryNameAttribute = "fc_name";
   }
 
   private async goToPage(page: number): Promise<void> {
@@ -222,12 +288,30 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.grid?.setError("Select a lookup value before creating a related record.");
       return;
     }
+    if (this.config.useDemoData) {
+      this.grid?.setError("Create is disabled in demo data mode.");
+      return;
+    }
     this.editingRecordId = null;
     this.recordForm.open("create", this.config, {});
   }
 
   private async openEdit(record: EntityRecord): Promise<void> {
-    if (!this.config || !this.recordForm || !this.dataService || !record.id) {
+    if (!this.config || !this.recordForm || !record.id) {
+      return;
+    }
+
+    if (this.config.useDemoData) {
+      this.editingRecordId = record.id;
+      const initial: RecordFormValues = {};
+      for (const col of this.config.displayColumns) {
+        initial[col] = (record[col] as string) ?? "";
+      }
+      this.recordForm.open("edit", this.config, initial);
+      return;
+    }
+
+    if (!this.dataService) {
       return;
     }
 
@@ -259,7 +343,16 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   }
 
   private async handleFormSubmit(values: RecordFormValues): Promise<void> {
-    if (!this.config || !this.dataService || !this.recordForm) {
+    if (!this.config || !this.recordForm) {
+      return;
+    }
+
+    if (this.config.useDemoData) {
+      this.recordForm.setError("Save is disabled in demo data mode.");
+      return;
+    }
+
+    if (!this.dataService) {
       return;
     }
 
@@ -303,7 +396,16 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   }
 
   private async handleDelete(record: EntityRecord): Promise<void> {
-    if (!this.config || !this.dataService || !record.id) {
+    if (!this.config || !record.id) {
+      return;
+    }
+
+    if (this.config.useDemoData) {
+      this.grid?.setError("Delete is disabled in demo data mode.");
+      return;
+    }
+
+    if (!this.dataService) {
       return;
     }
 
@@ -330,6 +432,18 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     }
   }
 
+  private showFatal(message: string): void {
+    if (!this.container) {
+      return;
+    }
+    if (!this.fatalEl) {
+      this.fatalEl = document.createElement("div");
+      this.fatalEl.className = "lfs-fatal";
+      this.container.appendChild(this.fatalEl);
+    }
+    this.fatalEl.textContent = message;
+  }
+
   private errorMessage(err: unknown, fallback: string): string {
     if (!err) {
       return fallback;
@@ -350,9 +464,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     );
   }
 
-  /**
-   * Hide the native bound text input that Power Pages renders behind the PCF host.
-   */
   private hideNativeHostInput(): void {
     if (this.hostHidden) {
       return;
@@ -365,7 +476,10 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         );
         inputs.forEach((el) => {
           if (el instanceof HTMLElement && !el.classList.contains("lfs-input")) {
-            el.style.display = "none";
+            // Don't hide if it's outside our PCF root after render
+            if (!el.closest(".lfs-root") && !el.closest(".lfs-modal")) {
+              el.style.display = "none";
+            }
           }
         });
       }

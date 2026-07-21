@@ -11,7 +11,7 @@ $pcfOut = Join-Path $root "LookupFilteredSubgrid\out\controls\LookupFilteredSubg
 $distDir = Join-Path $root "dist"
 $packDir = Join-Path $root "dist\_pack"
 $controlName = "zrd_Zerodha.PCF.LookupFilteredSubgrid"
-$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_0_0_0.zip"
+$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_0_1_0.zip"
 $packager = Join-Path $env:TEMP "pcf-nuget\Microsoft.CrmSdk.CoreTools.9.1.0.155\content\bin\coretools\SolutionPackager.exe"
 
 if (-not (Test-Path (Join-Path $pcfOut "bundle.js"))) {
@@ -50,7 +50,7 @@ Copy-Item (Join-Path $pcfOut "strings") (Join-Path $packDir "Controls\$controlNa
     <Descriptions>
       <Description description="PCF subgrid filtered by a form lookup value, with CRUD support for Power Pages." languagecode="1033" />
     </Descriptions>
-    <Version>1.0.0.0</Version>
+    <Version>1.0.1.0</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>Zerodha</UniqueName>
