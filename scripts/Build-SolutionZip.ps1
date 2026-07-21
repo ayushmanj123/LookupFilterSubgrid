@@ -1,5 +1,6 @@
-# Builds an unmanaged Dataverse solution ZIP containing the LookupFilteredSubgrid PCF.
-# Output: dist/LookupFilteredSubgridSolution_1_0_0_0.zip
+# Builds an unmanaged Dataverse solution ZIP that CRM can import.
+# Required root entries: solution.xml, customizations.xml, [Content_Types].xml
+# Output: dist/LookupFilteredSubgridSolution_1_0_1_0.zip
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -9,36 +10,31 @@ if (-not (Test-Path (Join-Path $root "LookupFilteredSubgrid\package.json"))) {
 
 $pcfOut = Join-Path $root "LookupFilteredSubgrid\out\controls\LookupFilteredSubgrid"
 $distDir = Join-Path $root "dist"
-$packDir = Join-Path $root "dist\_pack"
+$importDir = Join-Path $root "dist\_import"
 $controlName = "zrd_Zerodha.PCF.LookupFilteredSubgrid"
 $zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_0_1_0.zip"
-$packager = Join-Path $env:TEMP "pcf-nuget\Microsoft.CrmSdk.CoreTools.9.1.0.155\content\bin\coretools\SolutionPackager.exe"
 
 if (-not (Test-Path (Join-Path $pcfOut "bundle.js"))) {
   throw "PCF build output not found at $pcfOut. Run 'npm run build' in LookupFilteredSubgrid first."
 }
 
-if (Test-Path $packDir) { Remove-Item $packDir -Recurse -Force }
-New-Item -ItemType Directory -Force -Path (Join-Path $packDir "Other") | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $packDir "Controls\$controlName") | Out-Null
+if (Test-Path $importDir) { Remove-Item $importDir -Recurse -Force }
+New-Item -ItemType Directory -Force -Path (Join-Path $importDir "Controls\$controlName\css") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $importDir "Controls\$controlName\strings") | Out-Null
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
 
-# Copy built control assets
-Copy-Item (Join-Path $pcfOut "ControlManifest.xml") (Join-Path $packDir "Controls\$controlName\ControlManifest.xml") -Force
-Copy-Item (Join-Path $pcfOut "bundle.js") (Join-Path $packDir "Controls\$controlName\bundle.js") -Force
-Copy-Item (Join-Path $pcfOut "css") (Join-Path $packDir "Controls\$controlName\css") -Recurse -Force
-Copy-Item (Join-Path $pcfOut "strings") (Join-Path $packDir "Controls\$controlName\strings") -Recurse -Force
+function Write-Utf8NoBom([string]$Path, [string]$Content) {
+  $utf8 = New-Object System.Text.UTF8Encoding $false
+  [System.IO.File]::WriteAllText($Path, $Content, $utf8)
+}
 
-# Control metadata for Solution Packager
-@"
-<?xml version="1.0" encoding="utf-8"?>
-<CustomControl xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>$controlName</Name>
-  <FileName>/Controls/$controlName/ControlManifest.xml</FileName>
-</CustomControl>
-"@ | Set-Content -Path (Join-Path $packDir "Controls\$controlName\ControlManifest.xml.data.xml") -Encoding UTF8
+# Control assets (import layout uses Controls/ at zip root)
+Copy-Item (Join-Path $pcfOut "ControlManifest.xml") (Join-Path $importDir "Controls\$controlName\ControlManifest.xml") -Force
+Copy-Item (Join-Path $pcfOut "bundle.js") (Join-Path $importDir "Controls\$controlName\bundle.js") -Force
+Copy-Item (Join-Path $pcfOut "css\*") (Join-Path $importDir "Controls\$controlName\css\") -Force
+Copy-Item (Join-Path $pcfOut "strings\*") (Join-Path $importDir "Controls\$controlName\strings\") -Force
 
-# Solution.xml
+# solution.xml at ZIP ROOT (required by Dataverse import)
 @"
 <?xml version="1.0" encoding="utf-8"?>
 <ImportExportXml version="9.2.25034.180" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -60,38 +56,38 @@ Copy-Item (Join-Path $pcfOut "strings") (Join-Path $packDir "Controls\$controlNa
       <Descriptions>
         <Description description="Zerodha" languagecode="1033" />
       </Descriptions>
-      <EMailAddress xsi:nil="true"></EMailAddress>
-      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <EMailAddress xsi:nil="true" />
+      <SupportingWebsiteUrl xsi:nil="true" />
       <CustomizationPrefix>zrd</CustomizationPrefix>
       <CustomizationOptionValuePrefix>61735</CustomizationOptionValuePrefix>
       <Addresses>
         <Address>
           <AddressNumber>1</AddressNumber>
           <AddressTypeCode>1</AddressTypeCode>
-          <City xsi:nil="true"></City>
-          <County xsi:nil="true"></County>
-          <Country xsi:nil="true"></Country>
-          <Fax xsi:nil="true"></Fax>
-          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
-          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
-          <Latitude xsi:nil="true"></Latitude>
-          <Line1 xsi:nil="true"></Line1>
-          <Line2 xsi:nil="true"></Line2>
-          <Line3 xsi:nil="true"></Line3>
-          <Longitude xsi:nil="true"></Longitude>
-          <Name xsi:nil="true"></Name>
-          <PostalCode xsi:nil="true"></PostalCode>
-          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
-          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <City xsi:nil="true" />
+          <County xsi:nil="true" />
+          <Country xsi:nil="true" />
+          <Fax xsi:nil="true" />
+          <FreightTermsCode xsi:nil="true" />
+          <ImportSequenceNumber xsi:nil="true" />
+          <Latitude xsi:nil="true" />
+          <Line1 xsi:nil="true" />
+          <Line2 xsi:nil="true" />
+          <Line3 xsi:nil="true" />
+          <Longitude xsi:nil="true" />
+          <Name xsi:nil="true" />
+          <PostalCode xsi:nil="true" />
+          <PostOfficeBox xsi:nil="true" />
+          <PrimaryContactName xsi:nil="true" />
           <ShippingMethodCode>1</ShippingMethodCode>
-          <StateOrProvince xsi:nil="true"></StateOrProvince>
-          <Telephone1 xsi:nil="true"></Telephone1>
-          <Telephone2 xsi:nil="true"></Telephone2>
-          <Telephone3 xsi:nil="true"></Telephone3>
-          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
-          <UPSZone xsi:nil="true"></UPSZone>
-          <UTCOffset xsi:nil="true"></UTCOffset>
-          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+          <StateOrProvince xsi:nil="true" />
+          <Telephone1 xsi:nil="true" />
+          <Telephone2 xsi:nil="true" />
+          <Telephone3 xsi:nil="true" />
+          <TimeZoneRuleVersionNumber xsi:nil="true" />
+          <UPSZone xsi:nil="true" />
+          <UTCOffset xsi:nil="true" />
+          <UTCConversionTimeZoneCode xsi:nil="true" />
         </Address>
       </Addresses>
     </Publisher>
@@ -101,9 +97,9 @@ Copy-Item (Join-Path $pcfOut "strings") (Join-Path $packDir "Controls\$controlNa
     <MissingDependencies />
   </SolutionManifest>
 </ImportExportXml>
-"@ | Set-Content -Path (Join-Path $packDir "Other\Solution.xml") -Encoding UTF8
+"@ | ForEach-Object { Write-Utf8NoBom -Path (Join-Path $importDir "solution.xml") -Content $_ }
 
-# Customizations.xml
+# customizations.xml at ZIP ROOT (required by Dataverse import)
 @"
 <?xml version="1.0" encoding="utf-8"?>
 <ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -116,28 +112,76 @@ Copy-Item (Join-Path $pcfOut "strings") (Join-Path $packDir "Controls\$controlNa
   <EntityRelationships />
   <OrganizationSettings />
   <optionsets />
-  <CustomControls />
+  <CustomControls>
+    <CustomControl>
+      <Name>$controlName</Name>
+      <FileName>/Controls/$controlName/ControlManifest.xml</FileName>
+    </CustomControl>
+  </CustomControls>
   <SolutionPluginAssemblies />
   <EntityDataProviders />
   <Languages>
     <Language>1033</Language>
   </Languages>
 </ImportExportXml>
-"@ | Set-Content -Path (Join-Path $packDir "Other\Customizations.xml") -Encoding UTF8
+"@ | ForEach-Object { Write-Utf8NoBom -Path (Join-Path $importDir "customizations.xml") -Content $_ }
+
+# [Content_Types].xml at ZIP ROOT
+@"
+<?xml version="1.0" encoding="utf-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/octet-stream" />
+  <Default Extension="js" ContentType="application/octet-stream" />
+  <Default Extension="css" ContentType="application/octet-stream" />
+  <Default Extension="resx" ContentType="application/octet-stream" />
+  <Override PartName="/solution.xml" ContentType="application/octet-stream" />
+  <Override PartName="/customizations.xml" ContentType="application/octet-stream" />
+  <Override PartName="/Controls/$controlName/ControlManifest.xml" ContentType="application/octet-stream" />
+</Types>
+"@ | ForEach-Object { Write-Utf8NoBom -Path (Join-Path $importDir "[Content_Types].xml") -Content $_ }
 
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
-if (Test-Path $packager) {
-  & $packager /action:Pack /zipfile:$zipPath /folder:$packDir /packagetype:Unmanaged /allowDelete:Yes
-  if ($LASTEXITCODE -ne 0) { throw "SolutionPackager failed with exit code $LASTEXITCODE" }
-} else {
-  # Fallback: zip folder contents directly (CRM import format)
-  Add-Type -AssemblyName System.IO.Compression.FileSystem
-  [System.IO.Compression.ZipFile]::CreateFromDirectory($packDir, $zipPath)
+# Zip entries must be at the root of the archive (not nested under a folder).
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$zip = [System.IO.Compression.ZipFile]::Open($zipPath, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+  $files = Get-ChildItem -Path $importDir -Recurse -File
+  foreach ($file in $files) {
+    $relative = $file.FullName.Substring($importDir.Length).TrimStart("\", "/")
+    $entryName = $relative.Replace("\", "/")
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+      $zip,
+      $file.FullName,
+      $entryName,
+      [System.IO.Compression.CompressionLevel]::Optimal
+    ) | Out-Null
+  }
+}
+finally {
+  $zip.Dispose()
 }
 
-# Cleanup staging
-Remove-Item $packDir -Recurse -Force
+Remove-Item $importDir -Recurse -Force
+
+# Verify required entries exist at zip root
+$verify = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+try {
+  $names = $verify.Entries | ForEach-Object { $_.FullName.Replace("\", "/") }
+  $required = @("solution.xml", "customizations.xml", "[Content_Types].xml")
+  foreach ($r in $required) {
+    if ($names -notcontains $r) {
+      throw "Packaged zip is missing required root entry: $r. Found: $($names -join ', ')"
+    }
+  }
+  Write-Host "Zip root entries OK: $($required -join ', ')"
+  $names | ForEach-Object { Write-Host "  $_" }
+}
+finally {
+  $verify.Dispose()
+}
 
 Write-Host "Created: $zipPath"
 Get-Item $zipPath | Format-List FullName, Length, LastWriteTime
