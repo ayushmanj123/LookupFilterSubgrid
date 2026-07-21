@@ -28,7 +28,7 @@ Output bundle: `LookupFilteredSubgrid/out/controls/LookupFilteredSubgrid/`.
 To package into a Dataverse solution, use Power Platform CLI once installed:
 
 ```powershell
-pac solution init --publisher-name Zerodha --publisher-prefix zrd --outputDirectory LookupFilteredSubgridSolution
+pac solution init --publisher-name Ayush --publisher-prefix ayu --outputDirectory LookupFilteredSubgridSolution
 pac solution add-reference --path LookupFilteredSubgrid --outputDirectory LookupFilteredSubgridSolution
 msbuild LookupFilteredSubgridSolution /p:Configuration=Release
 ```

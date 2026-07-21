@@ -11,8 +11,8 @@ if (-not (Test-Path (Join-Path $root "LookupFilteredSubgrid\package.json"))) {
 $pcfOut = Join-Path $root "LookupFilteredSubgrid\out\controls\LookupFilteredSubgrid"
 $distDir = Join-Path $root "dist"
 $importDir = Join-Path $root "dist\_import"
-$controlName = "zrd_Zerodha.PCF.LookupFilteredSubgrid"
-$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_1_0_0.zip"
+$controlName = "ayu_Ayush.PCF.LookupFilteredSubgrid"
+$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_2_0_0.zip"
 
 if (-not (Test-Path (Join-Path $pcfOut "bundle.js"))) {
   throw "PCF build output not found at $pcfOut. Run 'npm run build' in LookupFilteredSubgrid first."
@@ -46,20 +46,20 @@ Copy-Item (Join-Path $pcfOut "strings\*") (Join-Path $importDir "Controls\$contr
     <Descriptions>
       <Description description="PCF subgrid filtered by a form lookup value, with CRUD support for Power Pages." languagecode="1033" />
     </Descriptions>
-    <Version>1.1.0.0</Version>
+    <Version>1.2.0.0</Version>
     <Managed>0</Managed>
     <Publisher>
-      <UniqueName>Zerodha</UniqueName>
+      <UniqueName>Ayush</UniqueName>
       <LocalizedNames>
-        <LocalizedName description="Zerodha" languagecode="1033" />
+        <LocalizedName description="Ayush" languagecode="1033" />
       </LocalizedNames>
       <Descriptions>
-        <Description description="Zerodha" languagecode="1033" />
+        <Description description="Ayush" languagecode="1033" />
       </Descriptions>
       <EMailAddress xsi:nil="true" />
       <SupportingWebsiteUrl xsi:nil="true" />
-      <CustomizationPrefix>zrd</CustomizationPrefix>
-      <CustomizationOptionValuePrefix>61735</CustomizationOptionValuePrefix>
+      <CustomizationPrefix>ayu</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>61736</CustomizationOptionValuePrefix>
       <Addresses>
         <Address>
           <AddressNumber>1</AddressNumber>
