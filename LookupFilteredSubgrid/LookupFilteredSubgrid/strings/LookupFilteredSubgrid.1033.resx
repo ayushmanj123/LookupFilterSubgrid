@@ -69,76 +69,22 @@
   <data name="Value_Desc_Key" xml:space="preserve">
     <value>Placeholder bound text field used to host the control on the form.</value>
   </data>
-  <data name="LookupField_Display_Key" xml:space="preserve">
-    <value>Lookup Field Logical Name</value>
-  </data>
-  <data name="LookupField_Desc_Key" xml:space="preserve">
-    <value>Logical name of the form lookup field whose GUID filters the grid (e.g. Applicant 2).</value>
-  </data>
   <data name="TargetEntity_Display_Key" xml:space="preserve">
-    <value>Target Entity Logical Name</value>
+    <value>Subgrid Table Logical Name</value>
   </data>
   <data name="TargetEntity_Desc_Key" xml:space="preserve">
-    <value>Logical name of the related table to display.</value>
+    <value>Logical name of the related table to show in the subgrid (e.g. akatable).</value>
+  </data>
+  <data name="LookupField_Display_Key" xml:space="preserve">
+    <value>Form Lookup Field Logical Name</value>
+  </data>
+  <data name="LookupField_Desc_Key" xml:space="preserve">
+    <value>Logical name of the lookup on the primary form used to filter the grid (e.g. fc_applican).</value>
   </data>
   <data name="FilterAttribute_Display_Key" xml:space="preserve">
-    <value>Filter Attribute Logical Name</value>
+    <value>Subgrid Lookup Field Logical Name</value>
   </data>
   <data name="FilterAttribute_Desc_Key" xml:space="preserve">
-    <value>Lookup column on the related table used in the OData filter.</value>
-  </data>
-  <data name="FilterLookupEntitySet_Display_Key" xml:space="preserve">
-    <value>Filter Lookup Entity Set Name</value>
-  </data>
-  <data name="FilterLookupEntitySet_Desc_Key" xml:space="preserve">
-    <value>Entity set (collection) name of the lookup target table for OData bind on create (e.g. contacts, cr123_applicants).</value>
-  </data>
-  <data name="DisplayColumns_Display_Key" xml:space="preserve">
-    <value>Display Columns</value>
-  </data>
-  <data name="DisplayColumns_Desc_Key" xml:space="preserve">
-    <value>Comma-separated column logical names to show in the grid and forms.</value>
-  </data>
-  <data name="PrimaryName_Display_Key" xml:space="preserve">
-    <value>Primary Name Attribute</value>
-  </data>
-  <data name="PrimaryName_Desc_Key" xml:space="preserve">
-    <value>Primary name column used for row titles and create/edit forms.</value>
-  </data>
-  <data name="PageSize_Display_Key" xml:space="preserve">
-    <value>Page Size</value>
-  </data>
-  <data name="PageSize_Desc_Key" xml:space="preserve">
-    <value>Number of records per page (default 10).</value>
-  </data>
-  <data name="EnableCreate_Display_Key" xml:space="preserve">
-    <value>Enable Create</value>
-  </data>
-  <data name="EnableCreate_Desc_Key" xml:space="preserve">
-    <value>Allow creating related records.</value>
-  </data>
-  <data name="EnableEdit_Display_Key" xml:space="preserve">
-    <value>Enable Edit</value>
-  </data>
-  <data name="EnableEdit_Desc_Key" xml:space="preserve">
-    <value>Allow editing related records.</value>
-  </data>
-  <data name="EnableDelete_Display_Key" xml:space="preserve">
-    <value>Enable Delete</value>
-  </data>
-  <data name="EnableDelete_Desc_Key" xml:space="preserve">
-    <value>Allow deleting related records.</value>
-  </data>
-  <data name="OrderBy_Display_Key" xml:space="preserve">
-    <value>Order By</value>
-  </data>
-  <data name="OrderBy_Desc_Key" xml:space="preserve">
-    <value>Optional OData $orderby clause (e.g. createdon desc).</value>
-  </data>
-  <data name="UseDemoData_Display_Key" xml:space="preserve">
-    <value>Use Demo Data</value>
-  </data>
-  <data name="UseDemoData_Desc_Key" xml:space="preserve">
-    <value>When true, shows sample rows without calling Web API (for local harness / UI preview).</value>
+    <value>Logical name of the lookup column on the subgrid table that points to the form record/lookup (e.g. fc_contact).</value>
   </data>
 </root>

@@ -11,17 +11,37 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 ## Download and import into CRM / Dataverse
 
-1. Download **[LookupFilteredSubgridSolution_1_0_2_0.zip](dist/LookupFilteredSubgridSolution_1_0_2_0.zip)** from this repo (or from the latest GitHub Release).
-2. In make.powerapps.com → **Solutions** → **Import solution** → select the ZIP → Import.
-3. After import, add the control to a Single Line Text column on your form (Web client), then enable it on the Power Pages form.
+1. Download **[LookupFilteredSubgridSolution_1_1_0_0.zip](dist/LookupFilteredSubgridSolution_1_1_0_0.zip)** from this repo.
+2. **Remove** any previous version of this control from the Contact form → Save & Publish.
+3. Import the ZIP → Publish customizations.
+4. Re-add the control on a Single Line Text placeholder field and set the **3 properties** below.
 
-Rebuild the ZIP locally:
+## Control properties (v1.1.0)
+
+| Property | Example | Meaning |
+|----------|---------|---------|
+| Bound `value` | Placeholder text column on Contact | Host field for the PCF |
+| `targetEntityLogicalName` | `akatable` | Subgrid table logical name |
+| `lookupFieldLogicalName` | `fc_applican` | Lookup on the Contact form |
+| `filterAttributeLogicalName` | `fc_contact` | Lookup on the subgrid table |
+
+Filtering uses **FetchXML built in code** (not a form property). Columns and create-bind entity set are resolved from Dataverse metadata.
+
+## Build
 
 ```powershell
 cd LookupFilteredSubgrid
+npm install
 npm run build
+npm test
 cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
 
-Full portal setup (Web API site settings, table permissions): [LookupFilteredSubgrid/README.md](LookupFilteredSubgrid/README.md).
+## Power Pages setup
+
+1. Ensure `fc_applican` is on the same form (can be hidden).
+2. Enable the custom component on the placeholder field.
+3. Enable Web API site settings + table permissions for `akatable` (and Contact as needed).
+
+Full notes: [LookupFilteredSubgrid/README.md](LookupFilteredSubgrid/README.md).

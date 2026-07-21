@@ -9,8 +9,6 @@ import {
   createDemoRecords,
   EntityRecord,
   getMissingConfigFields,
-  parseBooleanInput,
-  parseDisplayColumns,
   RecordFormValues,
 } from "./types";
 
@@ -35,6 +33,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private isLoading = false;
   private lastLookupField = "";
   private hostHidden = false;
+  private metadataReady = false;
 
   public init(
     context: ComponentFramework.Context<IInputs>,
@@ -54,11 +53,10 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       try {
         context.mode.trackContainerResize(true);
       } catch {
-        // Optional on some hosts
+        // Optional
       }
 
       this.hideNativeHostInput();
-
       this.dataService = new DataService(context.webAPI);
 
       this.emptyState = new EmptyState(this.container);
@@ -87,7 +85,12 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   public updateView(context: ComponentFramework.Context<IInputs>): void {
     try {
       this.context = context;
+      const prevTarget = this.config?.targetEntityLogicalName;
       this.applyConfig(context);
+
+      if (prevTarget !== this.config?.targetEntityLogicalName) {
+        this.metadataReady = false;
+      }
 
       const height = context.mode.allocatedHeight;
       if (height && height > 0) {
@@ -126,20 +129,21 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
 
   private applyConfig(context: ComponentFramework.Context<IInputs>): void {
     const p = context.parameters;
-    const useDemoExplicit = parseBooleanInput(p.useDemoData?.raw, false);
+    const useDemo = this.isLocalHarness();
     this.config = {
       lookupFieldLogicalName: (p.lookupFieldLogicalName.raw || "").trim(),
       targetEntityLogicalName: (p.targetEntityLogicalName.raw || "").trim(),
       filterAttributeLogicalName: (p.filterAttributeLogicalName.raw || "").trim(),
-      filterLookupEntitySetName: (p.filterLookupEntitySetName.raw || "").trim(),
-      displayColumns: parseDisplayColumns(p.displayColumns.raw),
-      primaryNameAttribute: (p.primaryNameAttribute.raw || "").trim(),
-      pageSize: p.pageSize.raw && p.pageSize.raw > 0 ? p.pageSize.raw : 10,
-      enableCreate: parseBooleanInput(p.enableCreate.raw, true),
-      enableEdit: parseBooleanInput(p.enableEdit.raw, true),
-      enableDelete: parseBooleanInput(p.enableDelete.raw, true),
-      orderBy: (p.orderBy.raw || "").trim(),
-      useDemoData: useDemoExplicit || this.isLocalHarness(),
+      filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
+      displayColumns: this.config?.displayColumns?.length
+        ? this.config.displayColumns
+        : ["name", "createdon"],
+      primaryNameAttribute: this.config?.primaryNameAttribute || "name",
+      pageSize: 10,
+      enableCreate: true,
+      enableEdit: true,
+      enableDelete: true,
+      useDemoData: useDemo,
     };
   }
 
@@ -172,6 +176,41 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     });
   }
 
+  private async ensureMetadata(): Promise<void> {
+    if (!this.config || !this.dataService || this.config.useDemoData) {
+      if (this.config?.useDemoData) {
+        this.config.primaryNameAttribute = this.config.primaryNameAttribute || "name";
+        this.config.displayColumns = [
+          this.config.primaryNameAttribute,
+          "createdon",
+        ];
+        this.config.filterLookupEntitySetName = "contacts";
+        this.metadataReady = true;
+      }
+      return;
+    }
+
+    if (this.metadataReady && this.config.primaryNameAttribute) {
+      return;
+    }
+
+    const entityMeta = await this.dataService.resolveEntityMetadata(
+      this.config.targetEntityLogicalName
+    );
+    this.config.primaryNameAttribute = entityMeta.primaryNameAttribute;
+    this.config.displayColumns = [entityMeta.primaryNameAttribute, "createdon"].filter(
+      (c, i, arr) => arr.indexOf(c) === i
+    );
+
+    this.config.filterLookupEntitySetName =
+      await this.dataService.resolveFilterLookupEntitySetName(
+        this.config.targetEntityLogicalName,
+        this.config.filterAttributeLogicalName
+      );
+
+    this.metadataReady = true;
+  }
+
   private async reload(): Promise<void> {
     if (!this.config || !this.grid || !this.emptyState) {
       return;
@@ -180,10 +219,11 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     const config = this.config;
     this.grid.setError(null);
 
-    const missing = getMissingConfigFields(config);
-    // In local harness / demo mode, fill safe defaults so UI is visible
-    if (config.useDemoData && missing.length) {
-      this.applyDemoDefaults(config);
+    if (config.useDemoData) {
+      const missing = getMissingConfigFields(config);
+      if (missing.length) {
+        this.applyDemoDefaults(config);
+      }
     }
 
     const stillMissing = getMissingConfigFields(config);
@@ -193,8 +233,16 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.emptyState.show(
         `PCF is loaded, but these properties are empty: ${stillMissing.join(
           ", "
-        )}. Set them on the form component (model-driven form designer), then enable the custom component on Power Pages.`
+        )}. Set targetEntityLogicalName, lookupFieldLogicalName, and filterAttributeLogicalName on the form component.`
       );
+      return;
+    }
+
+    try {
+      await this.ensureMetadata();
+    } catch (err) {
+      this.grid.setVisible(true);
+      this.grid.setError(this.errorMessage(err, "Failed to load table metadata."));
       return;
     }
 
@@ -205,9 +253,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.records = createDemoRecords(config);
       this.hasNextPage = false;
       this.grid.setLoading(false);
-      this.grid.setError(
-        "Demo data mode — sample rows only. Turn off Use Demo Data / open on Power Pages for live Web API."
-      );
+      this.grid.setError("Demo data mode (localhost) — sample rows only.");
       this.grid.render(config, this.records, 1, false, "No demo records.");
       return;
     }
@@ -243,7 +289,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         this.pageNumber
       );
       this.records = result.entities;
-      this.hasNextPage = !!result.nextLink;
+      this.hasNextPage = !!(result.hasMore || result.nextLink);
       this.grid.render(
         config,
         this.records,
@@ -264,12 +310,12 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   }
 
   private applyDemoDefaults(config: ControlConfig): void {
-    if (!config.lookupFieldLogicalName) config.lookupFieldLogicalName = "applicant2";
-    if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "fc_akaname";
+    if (!config.lookupFieldLogicalName) config.lookupFieldLogicalName = "fc_applican";
+    if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "akatable";
     if (!config.filterAttributeLogicalName) config.filterAttributeLogicalName = "fc_contact";
-    if (!config.filterLookupEntitySetName) config.filterLookupEntitySetName = "contacts";
-    if (!config.displayColumns.length) config.displayColumns = ["fc_name", "createdon"];
-    if (!config.primaryNameAttribute) config.primaryNameAttribute = "fc_name";
+    config.primaryNameAttribute = "name";
+    config.displayColumns = ["name", "createdon"];
+    config.filterLookupEntitySetName = "contacts";
   }
 
   private async goToPage(page: number): Promise<void> {
@@ -293,7 +339,11 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
     this.editingRecordId = null;
-    this.recordForm.open("create", this.config, {});
+    const editConfig = {
+      ...this.config,
+      displayColumns: [this.config.primaryNameAttribute],
+    };
+    this.recordForm.open("create", editConfig, {});
   }
 
   private async openEdit(record: EntityRecord): Promise<void> {
@@ -301,13 +351,15 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
 
+    const editColumns = [this.config.primaryNameAttribute];
+
     if (this.config.useDemoData) {
       this.editingRecordId = record.id;
       const initial: RecordFormValues = {};
-      for (const col of this.config.displayColumns) {
+      for (const col of editColumns) {
         initial[col] = (record[col] as string) ?? "";
       }
-      this.recordForm.open("edit", this.config, initial);
+      this.recordForm.open("edit", { ...this.config, displayColumns: editColumns }, initial);
       return;
     }
 
@@ -319,21 +371,18 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.recordForm.setBusy(true);
 
     try {
-      const columns = Array.from(
-        new Set([this.config.primaryNameAttribute, ...this.config.displayColumns])
-      );
       const full = await this.dataService.retrieveRecord(
         this.config.targetEntityLogicalName,
         record.id,
-        columns
+        editColumns
       );
       const initial: RecordFormValues = {};
-      for (const col of columns) {
+      for (const col of editColumns) {
         const val = full[col];
         initial[col] =
           val === null || val === undefined ? "" : (val as string | number | boolean);
       }
-      this.recordForm.open("edit", this.config, initial);
+      this.recordForm.open("edit", { ...this.config, displayColumns: editColumns }, initial);
     } catch (err) {
       this.grid?.setError(this.errorMessage(err, "Failed to load record for edit."));
       this.editingRecordId = null;
@@ -366,8 +415,12 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.recordForm.setError(null);
 
     try {
+      const writeConfig = {
+        ...this.config,
+        displayColumns: [this.config.primaryNameAttribute],
+      };
       const payload = this.dataService.buildWritePayload(
-        this.config,
+        writeConfig,
         values,
         this.filterGuid,
         isCreate
@@ -476,7 +529,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         );
         inputs.forEach((el) => {
           if (el instanceof HTMLElement && !el.classList.contains("lfs-input")) {
-            // Don't hide if it's outside our PCF root after render
             if (!el.closest(".lfs-root") && !el.closest(".lfs-modal")) {
               el.style.display = "none";
             }

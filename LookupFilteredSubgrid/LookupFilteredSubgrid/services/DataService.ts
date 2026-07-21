@@ -1,46 +1,113 @@
-import { ControlConfig, EntityRecord, LoadResult } from "../types";
+import {
+  buildFilterFetchXml,
+  ControlConfig,
+  EntityMetadataInfo,
+  EntityRecord,
+  LoadResult,
+} from "../types";
 
 export class DataService {
+  private entityMetaCache = new Map<string, EntityMetadataInfo>();
+  private lookupTargetSetCache = new Map<string, string>();
+
   constructor(private readonly webAPI: ComponentFramework.WebApi) {}
+
+  public async resolveEntityMetadata(entityLogicalName: string): Promise<EntityMetadataInfo> {
+    const key = entityLogicalName.toLowerCase();
+    const cached = this.entityMetaCache.get(key);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const result = await this.webAPI.retrieveMultipleRecords(
+        "EntityDefinitions",
+        `?$select=LogicalName,PrimaryNameAttribute,EntitySetName&$filter=LogicalName eq '${entityLogicalName}'`
+      );
+      const row = result.entities?.[0] as Record<string, unknown> | undefined;
+      const info: EntityMetadataInfo = {
+        primaryNameAttribute: String(row?.PrimaryNameAttribute || "name"),
+        entitySetName: String(row?.EntitySetName || this.guessEntitySetName(entityLogicalName)),
+      };
+      this.entityMetaCache.set(key, info);
+      return info;
+    } catch {
+      const fallback: EntityMetadataInfo = {
+        primaryNameAttribute: "name",
+        entitySetName: this.guessEntitySetName(entityLogicalName),
+      };
+      this.entityMetaCache.set(key, fallback);
+      return fallback;
+    }
+  }
+
+  /**
+   * Resolves the entity set name for the lookup target (e.g. contact → contacts).
+   */
+  public async resolveFilterLookupEntitySetName(
+    entityLogicalName: string,
+    filterAttributeLogicalName: string
+  ): Promise<string> {
+    const cacheKey = `${entityLogicalName}:${filterAttributeLogicalName}`.toLowerCase();
+    const cached = this.lookupTargetSetCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const result = await this.webAPI.retrieveMultipleRecords(
+        "EntityDefinitions",
+        `?$filter=LogicalName eq '${entityLogicalName}'&$expand=Attributes($filter=LogicalName eq '${filterAttributeLogicalName}';$select=LogicalName;$expand=Targets)`
+      );
+      // Portal / PCF may not support complex expand; fall through on failure.
+      const entity = result.entities?.[0] as Record<string, unknown> | undefined;
+      const attributes = entity?.Attributes as Array<Record<string, unknown>> | undefined;
+      const attr = attributes?.[0];
+      const targets = attr?.Targets as string[] | undefined;
+      const targetLogical = targets?.[0];
+      if (targetLogical) {
+        const targetMeta = await this.resolveEntityMetadata(targetLogical);
+        this.lookupTargetSetCache.set(cacheKey, targetMeta.entitySetName);
+        return targetMeta.entitySetName;
+      }
+    } catch {
+      // Fall through to contact default / guess
+    }
+
+    // Contact form scenario default
+    const fallback = "contacts";
+    this.lookupTargetSetCache.set(cacheKey, fallback);
+    return fallback;
+  }
 
   public async loadRecords(
     config: ControlConfig,
     filterGuid: string,
     pageNumber: number
   ): Promise<LoadResult> {
-    const selectColumns = this.buildSelectList(config);
-    const filterAttr = config.filterAttributeLogicalName;
-    const filter = `_${filterAttr}_value eq ${filterGuid}`;
-
-    let options = `?$select=${encodeURIComponent(selectColumns)}&$filter=${encodeURIComponent(filter)}`;
-
-    if (config.orderBy) {
-      options += `&$orderby=${encodeURIComponent(config.orderBy)}`;
-    }
-
-    const maxPageSize = Math.max(1, config.pageSize || 10);
-
-    let result = await this.webAPI.retrieveMultipleRecords(
+    const fetchXml = buildFilterFetchXml(
       config.targetEntityLogicalName,
-      options,
-      maxPageSize
+      config.filterAttributeLogicalName,
+      filterGuid,
+      config.primaryNameAttribute,
+      config.pageSize,
+      pageNumber
     );
 
-    let currentPage = 1;
-    while (currentPage < pageNumber && result.nextLink) {
-      const nextOptions = this.optionsFromNextLink(result.nextLink);
-      result = await this.webAPI.retrieveMultipleRecords(
-        config.targetEntityLogicalName,
-        nextOptions,
-        maxPageSize
-      );
-      currentPage += 1;
-    }
+    const options = `?fetchXml=${encodeURIComponent(fetchXml)}`;
+    const result = await this.webAPI.retrieveMultipleRecords(
+      config.targetEntityLogicalName,
+      options
+    );
 
     const entities = (result.entities || []).map((e) => this.normalizeEntity(e, config));
+    const pageSize = Math.max(1, config.pageSize);
+    const hasMore = entities.length >= pageSize;
+
     return {
       entities,
       nextLink: result.nextLink,
+      hasMore,
     };
   }
 
@@ -75,9 +142,6 @@ export class DataService {
     await this.webAPI.deleteRecord(entityLogicalName, recordId);
   }
 
-  /**
-   * Builds create/update payload. On create, binds the filter lookup to filterGuid.
-   */
   public buildWritePayload(
     config: ControlConfig,
     values: Record<string, unknown>,
@@ -87,6 +151,9 @@ export class DataService {
     const payload: Record<string, unknown> = {};
 
     for (const column of config.displayColumns) {
+      if (column === "createdon") {
+        continue;
+      }
       if (Object.prototype.hasOwnProperty.call(values, column)) {
         const raw = values[column];
         if (raw === "" || raw === undefined) {
@@ -111,13 +178,20 @@ export class DataService {
     return payload;
   }
 
-  private buildSelectList(config: ControlConfig): string {
-    const cols = new Set<string>(config.displayColumns);
-    if (config.primaryNameAttribute) {
-      cols.add(config.primaryNameAttribute);
+  private guessEntitySetName(logicalName: string): string {
+    if (logicalName === "contact") {
+      return "contacts";
     }
-    cols.add(`_${config.filterAttributeLogicalName}_value`);
-    return Array.from(cols).filter(Boolean).join(",");
+    if (logicalName === "account") {
+      return "accounts";
+    }
+    if (logicalName.endsWith("y")) {
+      return `${logicalName.slice(0, -1)}ies`;
+    }
+    if (logicalName.endsWith("s")) {
+      return logicalName;
+    }
+    return `${logicalName}s`;
   }
 
   private normalizeEntity(
@@ -135,7 +209,10 @@ export class DataService {
 
     if (!id) {
       const key = Object.keys(entity).find(
-        (k) => k.toLowerCase().endsWith("id") && typeof entity[k] === "string" && !k.startsWith("_")
+        (k) =>
+          k.toLowerCase().endsWith("id") &&
+          typeof entity[k] === "string" &&
+          !k.startsWith("_")
       );
       if (key) {
         id = entity[key] as string;
@@ -146,13 +223,5 @@ export class DataService {
       ...entity,
       id: id ? String(id).replace(/[{}]/g, "") : undefined,
     };
-  }
-
-  private optionsFromNextLink(nextLink: string): string {
-    const qIndex = nextLink.indexOf("?");
-    if (qIndex >= 0) {
-      return nextLink.substring(qIndex);
-    }
-    return nextLink.startsWith("?") ? nextLink : `?${nextLink}`;
   }
 }

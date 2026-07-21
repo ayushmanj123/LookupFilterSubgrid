@@ -40,15 +40,11 @@ Import the generated zip into your environment, then publish customizations.
 | Property | Required | Description |
 |----------|----------|-------------|
 | Bound `value` | Yes | Placeholder Single Line Text column that hosts the control |
-| `lookupFieldLogicalName` | Yes | Form lookup field whose GUID filters the grid |
-| `targetEntityLogicalName` | Yes | Related table logical name |
-| `filterAttributeLogicalName` | Yes | Lookup column on the related table used in `$filter` |
-| `filterLookupEntitySetName` | Yes | Entity set name of the lookup target for create `@odata.bind` (e.g. `contacts`, `cr123_applicants`) |
-| `displayColumns` | Yes | Comma-separated columns to show / edit |
-| `primaryNameAttribute` | Yes | Primary name column |
-| `pageSize` | No | Default `10` |
-| `enableCreate` / `enableEdit` / `enableDelete` | No | Default `true` |
-| `orderBy` | No | OData `$orderby` (e.g. `createdon desc`) |
+| `targetEntityLogicalName` | Yes | Subgrid table logical name (e.g. `akatable`) |
+| `lookupFieldLogicalName` | Yes | Lookup on the primary form (e.g. `fc_applican`) |
+| `filterAttributeLogicalName` | Yes | Lookup on the subgrid table (e.g. `fc_contact`) |
+
+Filtering uses FetchXML built in code. Display columns and create-bind entity set come from Dataverse metadata.
 
 ## Power Pages setup
 
