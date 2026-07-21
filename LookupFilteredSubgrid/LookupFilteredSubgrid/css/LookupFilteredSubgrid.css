@@ -1,0 +1,258 @@
+.lfs-root {
+  --lfs-bg: #f7f8fa;
+  --lfs-surface: #ffffff;
+  --lfs-border: #d8dee6;
+  --lfs-text: #1b2430;
+  --lfs-muted: #5b6775;
+  --lfs-primary: #0b5cab;
+  --lfs-primary-hover: #094a89;
+  --lfs-danger: #a4262c;
+  --lfs-error-bg: #fde7e9;
+  --lfs-radius: 6px;
+  --lfs-font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  font-family: var(--lfs-font);
+  color: var(--lfs-text);
+  background: var(--lfs-surface);
+  border: 1px solid var(--lfs-border);
+  border-radius: var(--lfs-radius);
+  padding: 12px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.lfs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.lfs-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lfs-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.lfs-btn {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.lfs-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lfs-btn-primary {
+  background: var(--lfs-primary);
+  color: #fff;
+}
+
+.lfs-btn-primary:hover:not(:disabled) {
+  background: var(--lfs-primary-hover);
+}
+
+.lfs-btn-secondary {
+  background: var(--lfs-bg);
+  border-color: var(--lfs-border);
+  color: var(--lfs-text);
+}
+
+.lfs-btn-link {
+  padding: 4px 8px;
+  color: var(--lfs-primary);
+  text-decoration: underline;
+  background: none;
+  border: none;
+}
+
+.lfs-btn-danger {
+  color: var(--lfs-danger);
+}
+
+.lfs-error {
+  background: var(--lfs-error-bg);
+  color: var(--lfs-danger);
+  border: 1px solid #f1aeb5;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.lfs-status {
+  color: var(--lfs-muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.lfs-status-loading::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--lfs-border);
+  border-top-color: var(--lfs-primary);
+  animation: lfs-spin 0.8s linear infinite;
+  vertical-align: -1px;
+}
+
+@keyframes lfs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lfs-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--lfs-border);
+  border-radius: 4px;
+}
+
+.lfs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.lfs-table th,
+.lfs-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--lfs-border);
+  vertical-align: middle;
+}
+
+.lfs-table th {
+  background: var(--lfs-bg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lfs-table tr:last-child td {
+  border-bottom: none;
+}
+
+.lfs-actions-col {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.lfs-empty-cell {
+  color: var(--lfs-muted);
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.lfs-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.lfs-pager-info {
+  font-size: 13px;
+  color: var(--lfs-muted);
+  min-width: 64px;
+  text-align: center;
+}
+
+.lfs-empty-state {
+  border: 1px dashed var(--lfs-border);
+  border-radius: var(--lfs-radius);
+  background: var(--lfs-bg);
+  color: var(--lfs-muted);
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lfs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 28, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+}
+
+.lfs-modal-overlay[hidden] {
+  display: none !important;
+}
+
+.lfs-modal {
+  background: var(--lfs-surface);
+  color: var(--lfs-text);
+  border-radius: 8px;
+  width: min(480px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+}
+
+.lfs-modal-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.lfs-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lfs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lfs-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lfs-muted);
+}
+
+.lfs-input {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--lfs-border);
+  border-radius: 4px;
+  color: var(--lfs-text);
+  background: #fff;
+}
+
+.lfs-input:focus {
+  outline: 2px solid rgba(11, 92, 171, 0.35);
+  border-color: var(--lfs-primary);
+}
+
+.lfs-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -1,0 +1,23 @@
+# dependencies
+/node_modules
+
+# generated directory
+**/generated
+
+# output directory
+/out
+
+# msbuild output directories
+/bin
+/obj
+
+# Visual Studio temporary files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs
+
+# OS generated files
+.DS_Store
+Thumbs.db

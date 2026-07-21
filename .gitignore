@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# generated / build
+**/generated/
+**/out/
+**/bin/
+**/obj/
+
+# Visual Studio / IDE
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs
+npm-debug.log*
+yarn-error.log*
+*.log
