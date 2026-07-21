@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Zerodha.PCF" constructor="LookupFilteredSubgrid" version="1.0.1" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
+  <control namespace="Zerodha.PCF" constructor="LookupFilteredSubgrid" version="1.0.2" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
     <external-service-usage enabled="false" />
     <property name="value" display-name-key="Value_Display_Key" description-key="Value_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" />
     <property name="lookupFieldLogicalName" display-name-key="LookupField_Display_Key" description-key="LookupField_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />

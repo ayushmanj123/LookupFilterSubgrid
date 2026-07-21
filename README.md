@@ -11,7 +11,7 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 ## Download and import into CRM / Dataverse
 
-1. Download **[LookupFilteredSubgridSolution_1_0_1_0.zip](dist/LookupFilteredSubgridSolution_1_0_1_0.zip)** from this repo (or from the latest GitHub Release).
+1. Download **[LookupFilteredSubgridSolution_1_0_2_0.zip](dist/LookupFilteredSubgridSolution_1_0_2_0.zip)** from this repo (or from the latest GitHub Release).
 2. In make.powerapps.com → **Solutions** → **Import solution** → select the ZIP → Import.
 3. After import, add the control to a Single Line Text column on your form (Web client), then enable it on the Power Pages form.
 

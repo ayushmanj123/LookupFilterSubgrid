@@ -12,7 +12,7 @@ $pcfOut = Join-Path $root "LookupFilteredSubgrid\out\controls\LookupFilteredSubg
 $distDir = Join-Path $root "dist"
 $importDir = Join-Path $root "dist\_import"
 $controlName = "zrd_Zerodha.PCF.LookupFilteredSubgrid"
-$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_0_1_0.zip"
+$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_0_2_0.zip"
 
 if (-not (Test-Path (Join-Path $pcfOut "bundle.js"))) {
   throw "PCF build output not found at $pcfOut. Run 'npm run build' in LookupFilteredSubgrid first."
@@ -46,7 +46,7 @@ Copy-Item (Join-Path $pcfOut "strings\*") (Join-Path $importDir "Controls\$contr
     <Descriptions>
       <Description description="PCF subgrid filtered by a form lookup value, with CRUD support for Power Pages." languagecode="1033" />
     </Descriptions>
-    <Version>1.0.1.0</Version>
+    <Version>1.0.2.0</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>Zerodha</UniqueName>
