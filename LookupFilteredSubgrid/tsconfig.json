@@ -3,6 +3,8 @@
   "compilerOptions": {
     "typeRoots": ["node_modules/@types"],
     "noImplicitAny": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0"
   }
 }

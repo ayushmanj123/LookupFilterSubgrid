@@ -12,7 +12,6 @@
     "start:watch": "pcf-scripts start watch",
     "refreshTypes": "pcf-scripts refreshTypes"
   },
-  "dependencies": {},
   "devDependencies": {
     "@microsoft/eslint-plugin-power-apps": "^0.2.51",
     "@types/node": "^18.19.54",
@@ -23,6 +22,6 @@
     "eslint-plugin-promise": "^6.6.0",
     "pcf-scripts": "^1.48.2",
     "pcf-start": "^1.48.2",
-    "typescript": "^4.9.5"
+    "typescript": "^5.9.3"
   }
 }
