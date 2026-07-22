@@ -1,82 +1,13 @@
 import {
   buildFilterFetchXml,
   ControlConfig,
-  EntityMetadataInfo,
   EntityRecord,
   LoadResult,
 } from "../types";
+import { PortalApi } from "./PortalApi";
 
 export class DataService {
-  private entityMetaCache = new Map<string, EntityMetadataInfo>();
-  private lookupTargetSetCache = new Map<string, string>();
-
-  constructor(private readonly webAPI: ComponentFramework.WebApi) {}
-
-  public async resolveEntityMetadata(entityLogicalName: string): Promise<EntityMetadataInfo> {
-    const key = entityLogicalName.toLowerCase();
-    const cached = this.entityMetaCache.get(key);
-    if (cached) {
-      return cached;
-    }
-
-    try {
-      const result = await this.webAPI.retrieveMultipleRecords(
-        "EntityDefinitions",
-        `?$select=LogicalName,PrimaryNameAttribute,EntitySetName&$filter=LogicalName eq '${entityLogicalName}'`
-      );
-      const row = result.entities?.[0] as Record<string, unknown> | undefined;
-      const info: EntityMetadataInfo = {
-        primaryNameAttribute: String(row?.PrimaryNameAttribute || "name"),
-        entitySetName: String(row?.EntitySetName || this.guessEntitySetName(entityLogicalName)),
-      };
-      this.entityMetaCache.set(key, info);
-      return info;
-    } catch {
-      const fallback: EntityMetadataInfo = {
-        primaryNameAttribute: "name",
-        entitySetName: this.guessEntitySetName(entityLogicalName),
-      };
-      this.entityMetaCache.set(key, fallback);
-      return fallback;
-    }
-  }
-
-  /**
-   * Resolves the entity set name for the lookup target (e.g. contact → contacts).
-   */
-  public async resolveFilterLookupEntitySetName(
-    entityLogicalName: string,
-    filterAttributeLogicalName: string
-  ): Promise<string> {
-    const cacheKey = `${entityLogicalName}:${filterAttributeLogicalName}`.toLowerCase();
-    const cached = this.lookupTargetSetCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    try {
-      const result = await this.webAPI.retrieveMultipleRecords(
-        "EntityDefinitions",
-        `?$filter=LogicalName eq '${entityLogicalName}'&$expand=Attributes($filter=LogicalName eq '${filterAttributeLogicalName}';$select=LogicalName;$expand=Targets)`
-      );
-      const entity = result.entities?.[0] as Record<string, unknown> | undefined;
-      const attributes = entity?.Attributes as Array<Record<string, unknown>> | undefined;
-      const attr = attributes?.[0];
-      const targets = attr?.Targets as string[] | undefined;
-      const targetLogical = targets?.[0];
-      if (targetLogical) {
-        const targetMeta = await this.resolveEntityMetadata(targetLogical);
-        this.lookupTargetSetCache.set(cacheKey, targetMeta.entitySetName);
-        return targetMeta.entitySetName;
-      }
-    } catch {
-      // Fall through to contact default / guess
-    }
-
-    const fallback = "contacts";
-    this.lookupTargetSetCache.set(cacheKey, fallback);
-    return fallback;
-  }
+  private readonly api = new PortalApi();
 
   public async loadRecords(
     config: ControlConfig,
@@ -92,20 +23,17 @@ export class DataService {
       pageNumber
     );
 
-    const options = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-    const result = await this.webAPI.retrieveMultipleRecords(
-      config.targetEntityLogicalName,
-      options
+    const entitySet = this.guessEntitySetName(config.targetEntityLogicalName);
+    const url = `/_api/${entitySet}?fetchXml=${encodeURIComponent(fetchXml)}`;
+    const response = await this.api.get(url);
+    const entities = this.extractEntities(response.data).map((e) =>
+      this.normalizeEntity(e, config)
     );
 
-    const entities = (result.entities || []).map((e) => this.normalizeEntity(e, config));
     const pageSize = Math.max(1, config.pageSize);
-    const hasMore = entities.length >= pageSize;
-
     return {
       entities,
-      nextLink: result.nextLink,
-      hasMore,
+      hasMore: entities.length >= pageSize,
     };
   }
 
@@ -114,18 +42,47 @@ export class DataService {
     recordId: string,
     columns: string[]
   ): Promise<EntityRecord> {
+    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const id = this.stripGuid(recordId);
     const select = columns.filter(Boolean).join(",");
-    const options = select ? `?$select=${encodeURIComponent(select)}` : undefined;
-    const record = await this.webAPI.retrieveRecord(entityLogicalName, recordId, options);
-    return this.normalizeEntity(record);
+    const query = select ? `?$select=${encodeURIComponent(select)}` : "";
+    const response = await this.api.get(`/_api/${entitySet}(${id})${query}`);
+    const record =
+      response.data && typeof response.data === "object"
+        ? (response.data as Record<string, unknown>)
+        : {};
+    return this.normalizeEntity(record, { targetEntityLogicalName: entityLogicalName } as ControlConfig);
   }
 
   public async createRecord(
     entityLogicalName: string,
     data: Record<string, unknown>
   ): Promise<string> {
-    const result = await this.webAPI.createRecord(entityLogicalName, data);
-    return result.id;
+    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const response = await this.api.post(`/_api/${entitySet}`, data);
+
+    const fromHeader =
+      response.getResponseHeader("entityid") ||
+      response.getResponseHeader("EntityId") ||
+      response.getResponseHeader("OData-EntityId");
+
+    if (fromHeader) {
+      const match = fromHeader.match(/\(([^)]+)\)/);
+      return this.stripGuid(match ? match[1] : fromHeader);
+    }
+
+    const body = response.data as Record<string, unknown> | null;
+    if (body && typeof body === "object") {
+      const primaryId = `${entityLogicalName}id`;
+      if (typeof body[primaryId] === "string") {
+        return this.stripGuid(body[primaryId] as string);
+      }
+      if (typeof body.id === "string") {
+        return this.stripGuid(body.id as string);
+      }
+    }
+
+    throw new Error("Create succeeded but no entity id was returned.");
   }
 
   public async updateRecord(
@@ -133,11 +90,15 @@ export class DataService {
     recordId: string,
     data: Record<string, unknown>
   ): Promise<void> {
-    await this.webAPI.updateRecord(entityLogicalName, recordId, data);
+    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const id = this.stripGuid(recordId);
+    await this.api.patch(`/_api/${entitySet}(${id})`, data);
   }
 
   public async deleteRecord(entityLogicalName: string, recordId: string): Promise<void> {
-    await this.webAPI.deleteRecord(entityLogicalName, recordId);
+    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const id = this.stripGuid(recordId);
+    await this.api.del(`/_api/${entitySet}(${id})`);
   }
 
   public buildWritePayload(
@@ -170,26 +131,53 @@ export class DataService {
     ) {
       const bindKey = `${config.filterAttributeLogicalName}@odata.bind`;
       const setName = config.filterLookupEntitySetName.replace(/^\//, "");
-      payload[bindKey] = `/${setName}(${filterGuid})`;
+      payload[bindKey] = `/${setName}(${this.stripGuid(filterGuid)})`;
     }
 
     return payload;
   }
 
-  private guessEntitySetName(logicalName: string): string {
-    if (logicalName === "contact") {
+  public guessEntitySetName(logicalName: string): string {
+    const name = (logicalName || "").trim().toLowerCase();
+    if (!name) {
+      return name;
+    }
+    if (name === "contact") {
       return "contacts";
     }
-    if (logicalName === "account") {
+    if (name === "account") {
       return "accounts";
     }
-    if (logicalName.endsWith("y")) {
-      return `${logicalName.slice(0, -1)}ies`;
+    if (name.endsWith("y") && !/(ay|ey|iy|oy|uy)$/.test(name)) {
+      return `${name.slice(0, -1)}ies`;
     }
-    if (logicalName.endsWith("s")) {
-      return logicalName;
+    if (name.endsWith("s")) {
+      return name;
     }
-    return `${logicalName}s`;
+    return `${name}s`;
+  }
+
+  private extractEntities(data: unknown): Array<Record<string, unknown>> {
+    if (!data) {
+      return [];
+    }
+    if (Array.isArray(data)) {
+      return data as Array<Record<string, unknown>>;
+    }
+    if (typeof data === "object") {
+      const obj = data as Record<string, unknown>;
+      if (Array.isArray(obj.value)) {
+        return obj.value as Array<Record<string, unknown>>;
+      }
+      if (Array.isArray(obj.entities)) {
+        return obj.entities as Array<Record<string, unknown>>;
+      }
+    }
+    return [];
+  }
+
+  private stripGuid(value: string): string {
+    return String(value || "").replace(/[{}]/g, "");
   }
 
   private normalizeEntity(
@@ -210,7 +198,8 @@ export class DataService {
         (k) =>
           k.toLowerCase().endsWith("id") &&
           typeof entity[k] === "string" &&
-          !k.startsWith("_")
+          !k.startsWith("_") &&
+          !k.includes("@")
       );
       if (key) {
         id = entity[key] as string;
@@ -219,7 +208,7 @@ export class DataService {
 
     return {
       ...entity,
-      id: id ? String(id).replace(/[{}]/g, "") : undefined,
+      id: id ? this.stripGuid(String(id)) : undefined,
     };
   }
 }

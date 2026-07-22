@@ -57,7 +57,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       }
 
       this.hideNativeHostInput();
-      this.dataService = new DataService(context.webAPI);
+      this.dataService = new DataService();
 
       this.emptyState = new EmptyState(this.container);
       this.grid = new GridView(this.container, {
@@ -177,16 +177,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   }
 
   private async ensureMetadata(): Promise<void> {
-    if (!this.config || !this.dataService || this.config.useDemoData) {
-      if (this.config?.useDemoData) {
-        this.config.primaryNameAttribute = this.config.primaryNameAttribute || "name";
-        this.config.displayColumns = [
-          this.config.primaryNameAttribute,
-          "createdon",
-        ];
-        this.config.filterLookupEntitySetName = "contacts";
-        this.metadataReady = true;
-      }
+    if (!this.config) {
       return;
     }
 
@@ -194,20 +185,13 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
 
-    const entityMeta = await this.dataService.resolveEntityMetadata(
-      this.config.targetEntityLogicalName
-    );
-    this.config.primaryNameAttribute = entityMeta.primaryNameAttribute;
-    this.config.displayColumns = [entityMeta.primaryNameAttribute, "createdon"].filter(
+    // Portal sites often block EntityDefinitions; use safe defaults for Contact forms.
+    this.config.primaryNameAttribute = this.config.primaryNameAttribute || "name";
+    this.config.displayColumns = [this.config.primaryNameAttribute, "createdon"].filter(
       (c, i, arr) => arr.indexOf(c) === i
     );
-
     this.config.filterLookupEntitySetName =
-      await this.dataService.resolveFilterLookupEntitySetName(
-        this.config.targetEntityLogicalName,
-        this.config.filterAttributeLogicalName
-      );
-
+      this.config.filterLookupEntitySetName || "contacts";
     this.metadataReady = true;
   }
 
