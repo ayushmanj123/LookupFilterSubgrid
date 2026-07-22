@@ -58,10 +58,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LookupFilteredSubgrid_Display_Key" xml:space="preserve">
-    <value>Lookup Filtered Subgrid 1.5.1</value>
+    <value>Lookup Filtered Subgrid 1.6.0</value>
   </data>
   <data name="LookupFilteredSubgrid_Desc_Key" xml:space="preserve">
-    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.5.1</value>
+    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.6.0</value>
   </data>
   <data name="Value_Display_Key" xml:space="preserve">
     <value>Bound Value</value>
@@ -106,9 +106,21 @@
     <value>Record GUID for the modal form. Use 00000000-0000-0000-0000-000000000000 for Insert/create.</value>
   </data>
   <data name="EntityFormId_Display_Key" xml:space="preserve">
-    <value>Entity / Basic Form ID</value>
+    <value>Create Basic Form ID</value>
   </data>
   <data name="EntityFormId_Desc_Key" xml:space="preserve">
     <value>GUID of the Insert Basic Form (entity form) opened in the create iframe modal.</value>
+  </data>
+  <data name="EditEntityFormId_Display_Key" xml:space="preserve">
+    <value>Edit Basic Form ID</value>
+  </data>
+  <data name="EditEntityFormId_Desc_Key" xml:space="preserve">
+    <value>GUID of the Edit Basic Form opened in the edit iframe modal. Record id comes from the grid row.</value>
+  </data>
+  <data name="CreateButtonLabel_Display_Key" xml:space="preserve">
+    <value>Create Button Label</value>
+  </data>
+  <data name="CreateButtonLabel_Desc_Key" xml:space="preserve">
+    <value>Text for the create button (e.g. Add Other Name). Defaults to Create if empty.</value>
   </data>
 </root>

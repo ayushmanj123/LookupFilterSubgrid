@@ -1,6 +1,6 @@
 import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import { EmptyState } from "./components/EmptyState";
-import { confirmDelete, RecordForm } from "./components/RecordForm";
+import { confirmDelete } from "./components/RecordForm";
 import { GridView } from "./components/GridView";
 import { PortalFormModal } from "./components/PortalFormModal";
 import { DataService } from "./services/DataService";
@@ -11,7 +11,6 @@ import {
   EMPTY_GUID,
   EntityRecord,
   getMissingConfigFields,
-  RecordFormValues,
   resolvePortalRecordId,
 } from "./types";
 
@@ -24,7 +23,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private lookupResolver = new LookupResolver();
   private grid: GridView | null = null;
   private emptyState: EmptyState | null = null;
-  private recordForm: RecordForm | null = null;
   private portalFormModal: PortalFormModal | null = null;
   private fatalEl: HTMLDivElement | null = null;
 
@@ -33,7 +31,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private pageNumber = 1;
   private hasNextPage = false;
   private records: EntityRecord[] = [];
-  private editingRecordId: string | null = null;
   private isLoading = false;
   private lastLookupField = "";
   private hostHidden = false;
@@ -70,12 +67,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         onDelete: (record) => void this.handleDelete(record),
         onPrevPage: () => void this.goToPage(this.pageNumber - 1),
         onNextPage: () => void this.goToPage(this.pageNumber + 1),
-        onRefresh: () => void this.reload(),
-      });
-
-      this.recordForm = new RecordForm(this.container, {
-        onSubmit: (values) => void this.handleFormSubmit(values),
-        onCancel: () => this.recordForm?.close(),
       });
 
       this.portalFormModal = new PortalFormModal(this.container, {
@@ -126,12 +117,10 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.lookupResolver.unwatch();
     this.grid?.destroy();
     this.emptyState?.destroy();
-    this.recordForm?.destroy();
     this.portalFormModal?.destroy();
     this.fatalEl?.remove();
     this.grid = null;
     this.emptyState = null;
-    this.recordForm = null;
     this.portalFormModal = null;
     this.dataService = null;
     this.fatalEl = null;
@@ -148,6 +137,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       portalId: (p.portalId.raw || "").trim() || EMPTY_GUID,
       recordId: resolvePortalRecordId(p.recordId.raw),
       entityFormId: (p.entityFormId.raw || "").trim(),
+      editEntityFormId: (p.editEntityFormId.raw || "").trim(),
+      createButtonLabel: (p.createButtonLabel.raw || "").trim() || "Create",
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: this.config?.displayColumns?.length
         ? this.config.displayColumns
@@ -239,7 +230,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.emptyState.show(
         `PCF is loaded, but these properties are empty: ${stillMissing.join(
           ", "
-        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, filterAttributeLogicalName, portalId, and entityFormId on the form component.`
+        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, filterAttributeLogicalName, portalId, entityFormId, and editEntityFormId on the form component.`
       );
       return;
     }
@@ -323,6 +314,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     if (!config.portalId) config.portalId = EMPTY_GUID;
     if (!config.recordId) config.recordId = EMPTY_GUID;
     if (!config.entityFormId) config.entityFormId = EMPTY_GUID;
+    if (!config.editEntityFormId) config.editEntityFormId = EMPTY_GUID;
+    if (!config.createButtonLabel) config.createButtonLabel = "Create";
     config.primaryNameAttribute = "mcshhs_akaname";
     config.displayColumns = [
       "mcshhs_akaname",
@@ -360,7 +353,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
 
-    this.editingRecordId = null;
     this.grid?.setError(null);
     this.portalFormModal.openCreate({
       portalId: this.config.portalId || EMPTY_GUID,
@@ -368,116 +360,32 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       entityFormId: this.config.entityFormId,
       associateLookupParamName: this.config.filterAttributeLogicalName,
       associateLookupRecordId: this.filterGuid,
-      title: "Create",
+      title: this.config.createButtonLabel || "Create",
     });
   }
 
-  private async openEdit(record: EntityRecord): Promise<void> {
-    if (!this.config || !this.recordForm || !record.id) {
+  private openEdit(record: EntityRecord): void {
+    if (!this.config || !this.portalFormModal || !record.id) {
       return;
     }
-
-    const editColumns = ["mcshhs_akaname", "mcshhs_firstname"];
-
     if (this.config.useDemoData) {
-      this.editingRecordId = record.id;
-      const initial: RecordFormValues = {};
-      for (const col of editColumns) {
-        initial[col] = (record[col] as string) ?? "";
-      }
-      this.recordForm.open("edit", { ...this.config, displayColumns: editColumns }, initial);
+      this.grid?.setError("Edit is disabled in demo data mode.");
       return;
     }
-
-    if (!this.dataService) {
-      return;
-    }
-
-    this.editingRecordId = record.id;
-    this.recordForm.setBusy(true);
-
-    try {
-      const full = await this.dataService.retrieveRecord(
-        this.config.targetEntityLogicalName,
-        this.config.targetEntitySetName,
-        record.id,
-        editColumns
+    if (!this.config.editEntityFormId) {
+      this.grid?.setError(
+        "Set editEntityFormId (Edit Basic Form GUID) and portalId on the control to open the edit form."
       );
-      const initial: RecordFormValues = {};
-      for (const col of editColumns) {
-        const val = full[col];
-        initial[col] =
-          val === null || val === undefined ? "" : (val as string | number | boolean);
-      }
-      this.recordForm.open("edit", { ...this.config, displayColumns: editColumns }, initial);
-    } catch (err) {
-      this.grid?.setError(this.errorMessage(err, "Failed to load record for edit."));
-      this.editingRecordId = null;
-    } finally {
-      this.recordForm.setBusy(false);
-    }
-  }
-
-  private async handleFormSubmit(values: RecordFormValues): Promise<void> {
-    if (!this.config || !this.recordForm) {
       return;
     }
 
-    if (this.config.useDemoData) {
-      this.recordForm.setError("Save is disabled in demo data mode.");
-      return;
-    }
-
-    if (!this.dataService) {
-      return;
-    }
-
-    const isCreate = !this.editingRecordId;
-    if (isCreate && !this.filterGuid) {
-      this.recordForm.setError("Lookup value is required to create a related record.");
-      return;
-    }
-
-    this.recordForm.setBusy(true);
-    this.recordForm.setError(null);
-
-    try {
-      const writeConfig = {
-        ...this.config,
-        displayColumns: ["mcshhs_akaname", "mcshhs_firstname"],
-      };
-      const payload = this.dataService.buildWritePayload(
-        writeConfig,
-        values,
-        this.filterGuid,
-        isCreate
-      );
-
-      if (isCreate) {
-        await this.dataService.createRecord(
-          this.config.targetEntityLogicalName,
-          this.config.targetEntitySetName,
-          payload
-        );
-      } else if (this.editingRecordId) {
-        await this.dataService.updateRecord(
-          this.config.targetEntityLogicalName,
-          this.config.targetEntitySetName,
-          this.editingRecordId,
-          payload
-        );
-      }
-
-      this.recordForm.close();
-      this.editingRecordId = null;
-      this.pageNumber = isCreate ? 1 : this.pageNumber;
-      await this.reload();
-      this.notifyOutputChanged();
-    } catch (err) {
-      this.recordForm.setError(this.errorMessage(err, "Save failed."));
-    } finally {
-      this.recordForm.setBusy(false);
-    }
+    this.grid?.setError(null);
+    this.portalFormModal.openEdit({
+      portalId: this.config.portalId || EMPTY_GUID,
+      recordId: record.id.replace(/[{}]/g, ""),
+      entityFormId: this.config.editEntityFormId,
+      title: "Edit",
+    });
   }
 
   private async handleDelete(record: EntityRecord): Promise<void> {

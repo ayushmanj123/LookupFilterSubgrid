@@ -6,7 +6,6 @@ export interface GridViewCallbacks {
   onCreate: () => void;
   onPrevPage: () => void;
   onNextPage: () => void;
-  onRefresh: () => void;
 }
 
 /**
@@ -21,6 +20,9 @@ export class GridView {
   private nextBtn: HTMLButtonElement;
   private createBtn: HTMLButtonElement;
   private errorEl: HTMLDivElement;
+  private openMenu: HTMLElement | null = null;
+  private docClickHandler: ((e: MouseEvent) => void) | null = null;
+  private keyHandler: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(
     private readonly container: HTMLDivElement,
@@ -33,31 +35,15 @@ export class GridView {
     grid.className = "entity-grid";
 
     const toolbar = document.createElement("div");
-    toolbar.className = "view-toolbar grid-actions clearfix";
-
-    const title = document.createElement("div");
-    title.className = "view-title pull-left";
-    title.textContent = "Related records";
-    toolbar.appendChild(title);
-
-    const actions = document.createElement("div");
-    actions.className = "toolbar-actions pull-right";
-
-    const refreshBtn = document.createElement("button");
-    refreshBtn.type = "button";
-    refreshBtn.className = "btn btn-default";
-    refreshBtn.textContent = "Refresh";
-    refreshBtn.addEventListener("click", () => this.callbacks.onRefresh());
-    actions.appendChild(refreshBtn);
+    toolbar.className = "view-toolbar grid-actions lfs-toolbar-right";
 
     this.createBtn = document.createElement("button");
     this.createBtn.type = "button";
     this.createBtn.className = "btn btn-primary create-action";
     this.createBtn.textContent = "Create";
     this.createBtn.addEventListener("click", () => this.callbacks.onCreate());
-    actions.appendChild(this.createBtn);
+    toolbar.appendChild(this.createBtn);
 
-    toolbar.appendChild(actions);
     grid.appendChild(toolbar);
 
     this.errorEl = document.createElement("div");
@@ -112,6 +98,24 @@ export class GridView {
     grid.appendChild(pager);
     this.root.appendChild(grid);
     this.container.appendChild(this.root);
+
+    this.docClickHandler = (e: MouseEvent) => {
+      if (!this.openMenu) {
+        return;
+      }
+      const target = e.target as Node | null;
+      if (target && this.openMenu.contains(target)) {
+        return;
+      }
+      this.closeOpenMenu();
+    };
+    this.keyHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        this.closeOpenMenu();
+      }
+    };
+    document.addEventListener("click", this.docClickHandler);
+    document.addEventListener("keydown", this.keyHandler);
   }
 
   public setLoading(isLoading: boolean, message = "Loading..."): void {
@@ -136,8 +140,10 @@ export class GridView {
     hasNextPage: boolean,
     emptyMessage?: string
   ): void {
+    this.closeOpenMenu();
     this.createBtn.hidden = !config.enableCreate;
     this.createBtn.disabled = !config.enableCreate;
+    this.createBtn.textContent = (config.createButtonLabel || "").trim() || "Create";
 
     const thead = this.root.querySelector(".lfs-thead") as HTMLTableSectionElement;
     thead.innerHTML = "";
@@ -154,7 +160,7 @@ export class GridView {
       const th = document.createElement("th");
       th.scope = "col";
       th.className = "actions";
-      th.textContent = "Actions";
+      th.textContent = "";
       headerRow.appendChild(th);
     }
 
@@ -183,25 +189,7 @@ export class GridView {
         if (config.enableEdit || config.enableDelete) {
           const td = document.createElement("td");
           td.className = "actions";
-
-          if (config.enableEdit) {
-            const editBtn = document.createElement("button");
-            editBtn.type = "button";
-            editBtn.className = "btn btn-link edit-link";
-            editBtn.textContent = "Edit";
-            editBtn.addEventListener("click", () => this.callbacks.onEdit(record));
-            td.appendChild(editBtn);
-          }
-
-          if (config.enableDelete) {
-            const deleteBtn = document.createElement("button");
-            deleteBtn.type = "button";
-            deleteBtn.className = "btn btn-link delete-link text-danger";
-            deleteBtn.textContent = "Delete";
-            deleteBtn.addEventListener("click", () => this.callbacks.onDelete(record));
-            td.appendChild(deleteBtn);
-          }
-
+          td.appendChild(this.buildActionsDropdown(config, record));
           tr.appendChild(td);
         }
 
@@ -219,7 +207,98 @@ export class GridView {
   }
 
   public destroy(): void {
+    this.closeOpenMenu();
+    if (this.docClickHandler) {
+      document.removeEventListener("click", this.docClickHandler);
+    }
+    if (this.keyHandler) {
+      document.removeEventListener("keydown", this.keyHandler);
+    }
     this.root.remove();
+  }
+
+  private buildActionsDropdown(config: ControlConfig, record: EntityRecord): HTMLElement {
+    const wrap = document.createElement("div");
+    wrap.className = "dropdown lfs-row-actions";
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "btn btn-default lfs-actions-toggle dropdown-toggle";
+    toggle.setAttribute("aria-haspopup", "true");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("title", "Actions");
+    toggle.innerHTML = '<span class="lfs-actions-caret" aria-hidden="true"></span>';
+    wrap.appendChild(toggle);
+
+    const menu = document.createElement("ul");
+    menu.className = "dropdown-menu dropdown-menu-right lfs-actions-menu";
+    menu.setAttribute("role", "menu");
+
+    if (config.enableEdit) {
+      const editItem = document.createElement("li");
+      editItem.setAttribute("role", "presentation");
+      const editLink = document.createElement("a");
+      editLink.href = "#";
+      editLink.setAttribute("role", "menuitem");
+      editLink.className = "lfs-action-edit";
+      editLink.innerHTML =
+        '<span class="lfs-action-icon lfs-icon-edit" aria-hidden="true"></span> Edit';
+      editLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeOpenMenu();
+        this.callbacks.onEdit(record);
+      });
+      editItem.appendChild(editLink);
+      menu.appendChild(editItem);
+    }
+
+    if (config.enableDelete) {
+      const delItem = document.createElement("li");
+      delItem.setAttribute("role", "presentation");
+      const delLink = document.createElement("a");
+      delLink.href = "#";
+      delLink.setAttribute("role", "menuitem");
+      delLink.className = "lfs-action-remove";
+      delLink.innerHTML =
+        '<span class="lfs-action-icon lfs-icon-remove" aria-hidden="true"></span> Remove Other Name';
+      delLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeOpenMenu();
+        this.callbacks.onDelete(record);
+      });
+      delItem.appendChild(delLink);
+      menu.appendChild(delItem);
+    }
+
+    wrap.appendChild(menu);
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isOpen = wrap.classList.contains("open");
+      this.closeOpenMenu();
+      if (!isOpen) {
+        wrap.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+        this.openMenu = wrap;
+      }
+    });
+
+    return wrap;
+  }
+
+  private closeOpenMenu(): void {
+    if (!this.openMenu) {
+      return;
+    }
+    this.openMenu.classList.remove("open");
+    const toggle = this.openMenu.querySelector(".lfs-actions-toggle");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", "false");
+    }
+    this.openMenu = null;
   }
 
   private formatHeader(logicalName: string): string {

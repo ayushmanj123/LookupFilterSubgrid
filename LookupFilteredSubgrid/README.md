@@ -1,59 +1,42 @@
 # Lookup Filtered Subgrid (Power Pages PCF)
 
-Field-bound Power Apps Component Framework control that displays related Dataverse records filtered by a **lookup value on the same form**. List load uses OData `/_api`; **Create** opens a Power Pages Basic Form in an iframe modal (same pattern as List).
+Field-bound PCF: related records filtered by a form lookup. List load uses OData `/_api`. **Create** and **Edit** open Power Pages Basic Forms in an iframe modal.
 
 ## Control properties
 
 | Property | Required | Description |
 |----------|----------|-------------|
-| Bound `value` | Yes | Placeholder Single Line Text column that hosts the control |
-| `targetEntityLogicalName` | Yes | Subgrid table logical name (e.g. `mcshhs_akaname`) |
-| `targetEntitySetName` | Yes | OData entity set for `/_api` (e.g. `mcshhs_akanames`) |
-| `lookupFieldLogicalName` | Yes | Lookup on the primary form (e.g. `fc_applican`) |
-| `filterAttributeLogicalName` | Yes | Lookup on the subgrid table (e.g. `fc_contact`) |
-| `portalId` | Yes | Website GUID for `/_portal/modal-form-template-path/{portalId}` (empty GUID allowed) |
-| `recordId` | Yes | Form record GUID; use `00000000-0000-0000-0000-000000000000` for Insert |
-| `entityFormId` | Yes | Insert Basic Form (entity form) GUID |
+| Bound `value` | Yes | Host Single Line Text |
+| `targetEntityLogicalName` | Yes | e.g. `mcshhs_akaname` |
+| `targetEntitySetName` | Yes | e.g. `mcshhs_akanames` |
+| `lookupFieldLogicalName` | Yes | Form lookup e.g. `fc_applican` |
+| `filterAttributeLogicalName` | Yes | Subgrid lookup e.g. `fc_contact` |
+| `portalId` | Yes | Website GUID (empty GUID allowed) |
+| `recordId` | Yes | Empty GUID for Insert only |
+| `entityFormId` | Yes | Insert Basic Form GUID |
+| `editEntityFormId` | Yes | Edit Basic Form GUID |
+| `createButtonLabel` | No | Create button text (default `Create`) |
 
-## Create (iframe)
-
-Create uses:
+## Create iframe
 
 ```text
 /_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}&{filterAttributeLogicalName}={lookupGuid}
 ```
 
-Example with your properties:
+Configure **Associated Table Reference** on the Insert form: Query String Name = `fc_contact` (match `filterAttributeLogicalName`).
+
+## Edit iframe
 
 ```text
-...&entityformid=...&fc_contact=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+/_portal/modal-form-template-path/{portalId}?id={rowRecordId}&entityformid={editEntityFormId}
 ```
 
-On the Insert Basic Form, configure **Associated Table Reference**:
+`id` comes from the grid row, not the maker `recordId` property. No `fc_contact` query param on Edit.
 
-| Setting | Value |
-|---------|--------|
-| Set Table Reference On Save | Yes |
-| Target Lookup Attribute Logical Name | `fc_contact` |
-| Table Logical Name | `contact` |
-| Source Type | Query String |
-| Query String Name | `fc_contact` (must match `filterAttributeLogicalName`) |
-| Query String Is Primary Key | Yes |
-| Populate Lookup Field | Yes |
+## UI
 
-Find IDs in Portal Management: **Websites** (portalId), **Basic Forms** (entityFormId).
+- Create button right-aligned; label from `createButtonLabel`.
+- Row actions: dropdown with **Edit** and **Remove Other Name** (delete via Web API).
+- No title / Refresh button.
 
-## Power Pages setup
-
-1. Enable the PCF on a placeholder text column; keep the filter lookup on the form.
-2. Include `webapi.safeAjax` for grid load / edit / delete.
-3. Web API site settings + table permissions for the related table.
-4. Create an **Insert** Basic Form for the related table and set `entityFormId` / `portalId` / `recordId` (empty GUID).
-5. After property changes: remove control → Save/Publish → import → re-add.
-
-## Runtime
-
-- Grid styled like portal List (`entity-grid`, Bootstrap `btn` / `table`).
-- Load: OData `$select` / `$filter` / `$orderby` / `$top`.
-- **Create**: Bootstrap modal + iframe Basic Form; grid reloads when the modal closes.
-- **Edit/Delete**: still Web API (edit modal / confirm) in v1.5.0.
+After property changes: remove control → Save/Publish → import → re-add.

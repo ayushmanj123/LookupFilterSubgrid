@@ -30,6 +30,8 @@ function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
     portalId: EMPTY_GUID,
     recordId: EMPTY_GUID,
     entityFormId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    editEntityFormId: "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+    createButtonLabel: "Create",
     filterLookupEntitySetName: "contacts",
     displayColumns: [
       "mcshhs_akaname",
@@ -54,6 +56,7 @@ assert.ok(
   )
 );
 assert.ok(getMissingConfigFields(baseConfig({ entityFormId: "" })).includes("entityFormId"));
+assert.ok(getMissingConfigFields(baseConfig({ editEntityFormId: "" })).includes("editEntityFormId"));
 
 assert.equal(resolvePortalRecordId(""), EMPTY_GUID);
 assert.equal(resolvePortalRecordId("{11111111-1111-1111-1111-111111111111}"), "11111111-1111-1111-1111-111111111111");

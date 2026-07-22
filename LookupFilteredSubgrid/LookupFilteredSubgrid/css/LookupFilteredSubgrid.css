@@ -32,19 +32,8 @@
   flex-wrap: wrap;
 }
 
-.lfs-host-inner .view-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.lfs-host-inner .toolbar-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.lfs-host-inner .toolbar-actions .btn + .btn {
-  margin-left: 0;
+.lfs-host-inner .view-toolbar.lfs-toolbar-right {
+  justify-content: flex-end;
 }
 
 .lfs-host-inner .view-grid {
@@ -78,6 +67,94 @@
   font-size: 14px;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Row actions dropdown (List-style) */
+.lfs-row-actions {
+  position: relative;
+  display: inline-block;
+}
+
+.lfs-actions-toggle {
+  min-width: 36px;
+  padding: 4px 10px;
+  background: #4a4a4a;
+  border-color: #4a4a4a;
+  color: #f5d76e;
+}
+
+.lfs-actions-toggle:hover,
+.lfs-actions-toggle:focus {
+  background: #3a3a3a;
+  border-color: #3a3a3a;
+  color: #ffe27a;
+}
+
+.lfs-actions-caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  border-top: 6px solid #f5d76e;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}
+
+.lfs-actions-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 1000;
+  min-width: 180px;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.lfs-row-actions.open > .lfs-actions-menu {
+  display: block;
+}
+
+.lfs-actions-menu > li > a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  clear: both;
+  font-weight: 400;
+  color: #333;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lfs-actions-menu > li > a:hover,
+.lfs-actions-menu > li > a:focus {
+  background: #fff3b0;
+  color: #111;
+  text-decoration: none;
+}
+
+.lfs-action-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+}
+
+.lfs-icon-edit {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23333' d='M11.5 1.5l3 3L5 14H2v-3L11.5 1.5zM2 15h12v1H2z'/%3E%3C/svg%3E");
+}
+
+.lfs-icon-remove {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23333' d='M6 2h4l1 1h3v1H2V3h3l1-1zm1 4v6h1V6H7zm3 0v6h1V6h-1zM3 5h10l-1 9H4L3 5z'/%3E%3C/svg%3E");
 }
 
 /* Fallback modal chrome when Bootstrap theme is thin inside the PCF host */

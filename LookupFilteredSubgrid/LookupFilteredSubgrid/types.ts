@@ -12,6 +12,10 @@ export interface ControlConfig {
   recordId: string;
   /** Insert Basic Form (entity form) GUID. */
   entityFormId: string;
+  /** Edit Basic Form (entity form) GUID. */
+  editEntityFormId: string;
+  /** Create button label (defaults to Create). */
+  createButtonLabel: string;
   /** Runtime default for create bind (e.g. contacts). */
   filterLookupEntitySetName: string;
   /** Resolved at runtime: primary name + createdon. */
@@ -37,6 +41,7 @@ export function getMissingConfigFields(config: ControlConfig): string[] {
   if (!config.filterAttributeLogicalName) missing.push("filterAttributeLogicalName");
   if (!config.portalId) missing.push("portalId");
   if (!config.entityFormId) missing.push("entityFormId");
+  if (!config.editEntityFormId) missing.push("editEntityFormId");
   return missing;
 }
 

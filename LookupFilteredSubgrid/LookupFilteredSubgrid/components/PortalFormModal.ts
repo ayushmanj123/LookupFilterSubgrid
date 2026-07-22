@@ -93,6 +93,27 @@ export class PortalFormModal {
 
     this.loadingEl.style.display = "block";
     this.iframe.src = url;
+    this.iframe.title = options.title || "Create";
+    this.show();
+  }
+
+  public openEdit(options: {
+    portalId: string;
+    recordId: string;
+    entityFormId: string;
+    title?: string;
+  }): void {
+    this.titleEl.textContent = options.title || "Edit";
+    const url = buildModalFormUrl(
+      options.portalId,
+      options.recordId,
+      options.entityFormId,
+      null
+    );
+
+    this.loadingEl.style.display = "block";
+    this.iframe.src = url;
+    this.iframe.title = options.title || "Edit";
     this.show();
   }
 

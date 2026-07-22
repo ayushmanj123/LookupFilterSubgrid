@@ -1,22 +1,19 @@
 # PCF — Lookup Filtered Subgrid
 
-Power Pages–oriented PCF: related records filtered by a form lookup, OData list load, and **Create** via iframe Basic Form (List-style modal).
+Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Basic Forms.
 
 | Folder | Purpose |
 |--------|---------|
-| [LookupFilteredSubgrid](LookupFilteredSubgrid/) | PCF source and guide |
-| [LookupFilteredSubgridSolution](LookupFilteredSubgridSolution/) | Solution project |
-| [dist/](dist/) | Importable unmanaged ZIP |
-| [scripts/Build-SolutionZip.ps1](scripts/Build-SolutionZip.ps1) | Pack after `npm run build` |
+| [LookupFilteredSubgrid](LookupFilteredSubgrid/) | Source |
+| [dist/](dist/) | Import ZIP |
+| [scripts/Build-SolutionZip.ps1](scripts/Build-SolutionZip.ps1) | Packer |
 
 ## Download
 
-1. Download **[LookupFilteredSubgridSolution_1_5_1_0.zip](dist/LookupFilteredSubgridSolution_1_5_1_0.zip)**.
-2. Remove the previous control from the form → Save & Publish.
-3. Import → Publish.
-4. Re-add **CustomPCF** / `cpf_CustomPCF.PCF.LookupFilteredSubgrid` and set properties.
+1. **[LookupFilteredSubgridSolution_1_6_0_0.zip](dist/LookupFilteredSubgridSolution_1_6_0_0.zip)**
+2. Remove old control → Save & Publish → Import → re-add **CustomPCF** control.
 
-## Properties (v1.5.1)
+## Properties (v1.6.0)
 
 | Property | Example |
 |----------|---------|
@@ -27,22 +24,18 @@ Power Pages–oriented PCF: related records filtered by a form lookup, OData lis
 | `portalId` | website GUID or empty GUID |
 | `recordId` | `00000000-0000-0000-0000-000000000000` (Insert) |
 | `entityFormId` | Insert Basic Form GUID |
+| `editEntityFormId` | Edit Basic Form GUID |
+| `createButtonLabel` | e.g. `Add Other Name` |
 
-Create iframe URL:
-
-`/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}&fc_contact={lookupGuid}`
-
-On the Insert Basic Form, set **Associated Table Reference** → Source Type **Query String**, Query String Name = `fc_contact` (same as `filterAttributeLogicalName`), Target Lookup = `fc_contact`, Populate Lookup Field = Yes.
+Create: `...&entityformid={entityFormId}&fc_contact={guid}`  
+Edit: `...&id={rowId}&entityformid={editEntityFormId}`
 
 ## Build
 
 ```powershell
 cd LookupFilteredSubgrid
-npm install
 npm run build
 npm test
 cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
-
-Import `dist/LookupFilteredSubgridSolution_1_5_1_0.zip`.
