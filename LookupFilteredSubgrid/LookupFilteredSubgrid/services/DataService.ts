@@ -23,7 +23,7 @@ export class DataService {
       pageNumber
     );
 
-    const entitySet = this.guessEntitySetName(config.targetEntityLogicalName);
+    const entitySet = this.normalizeEntitySet(config.targetEntitySetName);
     const url = `/_api/${entitySet}?fetchXml=${encodeURIComponent(fetchXml)}`;
     const response = await this.api.get(url);
     const entities = this.extractEntities(response.data).map((e) =>
@@ -39,10 +39,11 @@ export class DataService {
 
   public async retrieveRecord(
     entityLogicalName: string,
+    entitySetName: string,
     recordId: string,
     columns: string[]
   ): Promise<EntityRecord> {
-    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const entitySet = this.normalizeEntitySet(entitySetName);
     const id = this.stripGuid(recordId);
     const select = columns.filter(Boolean).join(",");
     const query = select ? `?$select=${encodeURIComponent(select)}` : "";
@@ -56,9 +57,10 @@ export class DataService {
 
   public async createRecord(
     entityLogicalName: string,
+    entitySetName: string,
     data: Record<string, unknown>
   ): Promise<string> {
-    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const entitySet = this.normalizeEntitySet(entitySetName);
     const response = await this.api.post(`/_api/${entitySet}`, data);
 
     const fromHeader =
@@ -87,16 +89,22 @@ export class DataService {
 
   public async updateRecord(
     entityLogicalName: string,
+    entitySetName: string,
     recordId: string,
     data: Record<string, unknown>
   ): Promise<void> {
-    const entitySet = this.guessEntitySetName(entityLogicalName);
+    const entitySet = this.normalizeEntitySet(entitySetName);
     const id = this.stripGuid(recordId);
     await this.api.patch(`/_api/${entitySet}(${id})`, data);
   }
 
-  public async deleteRecord(entityLogicalName: string, recordId: string): Promise<void> {
-    const entitySet = this.guessEntitySetName(entityLogicalName);
+  public async deleteRecord(
+    entityLogicalName: string,
+    entitySetName: string,
+    recordId: string
+  ): Promise<void> {
+    void entityLogicalName;
+    const entitySet = this.normalizeEntitySet(entitySetName);
     const id = this.stripGuid(recordId);
     await this.api.del(`/_api/${entitySet}(${id})`);
   }
@@ -137,24 +145,8 @@ export class DataService {
     return payload;
   }
 
-  public guessEntitySetName(logicalName: string): string {
-    const name = (logicalName || "").trim().toLowerCase();
-    if (!name) {
-      return name;
-    }
-    if (name === "contact") {
-      return "contacts";
-    }
-    if (name === "account") {
-      return "accounts";
-    }
-    if (name.endsWith("y") && !/(ay|ey|iy|oy|uy)$/.test(name)) {
-      return `${name.slice(0, -1)}ies`;
-    }
-    if (name.endsWith("s")) {
-      return name;
-    }
-    return `${name}s`;
+  private normalizeEntitySet(entitySetName: string): string {
+    return (entitySetName || "").trim().replace(/^\//, "");
   }
 
   private extractEntities(data: unknown): Array<Record<string, unknown>> {

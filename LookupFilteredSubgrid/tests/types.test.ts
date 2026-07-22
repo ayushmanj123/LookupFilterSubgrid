@@ -12,6 +12,7 @@ function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
   return {
     lookupFieldLogicalName: "fc_applican",
     targetEntityLogicalName: "akatable",
+    targetEntitySetName: "akatables",
     filterAttributeLogicalName: "fc_contact",
     filterLookupEntitySetName: "contacts",
     displayColumns: ["name", "createdon"],

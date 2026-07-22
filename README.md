@@ -11,21 +11,22 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 ## Download and import into CRM / Dataverse
 
-1. Download **[LookupFilteredSubgridSolution_1_2_2_0.zip](dist/LookupFilteredSubgridSolution_1_2_2_0.zip)** from this repo.
+1. Download **[LookupFilteredSubgridSolution_1_3_1_0.zip](dist/LookupFilteredSubgridSolution_1_3_1_0.zip)** from this repo.
 2. **Remove** any previous version of this control from the Contact form → Save & Publish.
 3. Import the ZIP → Publish customizations.
-4. Re-add the control (**Ayush** publisher / `ayu_Ayush.PCF.LookupFilteredSubgrid`) on a Single Line Text placeholder field and set the **3 properties** below.
+4. Re-add the control (**CustomPCF** publisher / `cpf_CustomPCF.PCF.LookupFilteredSubgrid`) on a Single Line Text placeholder field and set the properties below.
 
-## Control properties (v1.2.0)
+## Control properties (v1.3.1)
 
 | Property | Example | Meaning |
 |----------|---------|---------|
 | Bound `value` | Placeholder text column on Contact | Host field for the PCF |
 | `targetEntityLogicalName` | `akatable` | Subgrid table logical name |
+| `targetEntitySetName` | `akatables` | OData / Web API entity set for `/_api` |
 | `lookupFieldLogicalName` | `fc_applican` | Lookup on the Contact form |
 | `filterAttributeLogicalName` | `fc_contact` | Lookup on the subgrid table |
 
-Filtering uses **FetchXML built in code** (not a form property). Columns and create-bind entity set are resolved from Dataverse metadata.
+Filtering uses **FetchXML** via Power Pages `webapi.safeAjax` → `/_api/{targetEntitySetName}`.
 
 ## Build
 
@@ -38,10 +39,9 @@ cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
 
-## Power Pages setup
+Import `dist/LookupFilteredSubgridSolution_1_3_1_0.zip`, then publish customizations.
 
-1. Ensure `fc_applican` is on the same form (can be hidden).
-2. Enable the custom component on the placeholder field.
-3. Enable Web API site settings + table permissions for `akatable` (and Contact as needed).
+## Notes
 
-Full notes: [LookupFilteredSubgrid/README.md](LookupFilteredSubgrid/README.md).
+- The page must include Microsoft’s `webapi.safeAjax` wrapper script.
+- After publisher or property changes, remove the old control from the form before re-adding.

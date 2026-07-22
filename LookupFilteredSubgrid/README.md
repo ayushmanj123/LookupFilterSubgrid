@@ -28,7 +28,7 @@ Output bundle: `LookupFilteredSubgrid/out/controls/LookupFilteredSubgrid/`.
 To package into a Dataverse solution, use Power Platform CLI once installed:
 
 ```powershell
-pac solution init --publisher-name Ayush --publisher-prefix ayu --outputDirectory LookupFilteredSubgridSolution
+pac solution init --publisher-name CustomPCF --publisher-prefix cpf --outputDirectory LookupFilteredSubgridSolution
 pac solution add-reference --path LookupFilteredSubgrid --outputDirectory LookupFilteredSubgridSolution
 msbuild LookupFilteredSubgridSolution /p:Configuration=Release
 ```
@@ -41,6 +41,7 @@ Import the generated zip into your environment, then publish customizations.
 |----------|----------|-------------|
 | Bound `value` | Yes | Placeholder Single Line Text column that hosts the control |
 | `targetEntityLogicalName` | Yes | Subgrid table logical name (e.g. `akatable`) |
+| `targetEntitySetName` | Yes | OData / Web API entity set name for `/_api` (e.g. `akatables`) |
 | `lookupFieldLogicalName` | Yes | Lookup on the primary form (e.g. `fc_applican`) |
 | `filterAttributeLogicalName` | Yes | Lookup on the subgrid table (e.g. `fc_contact`) |
 
@@ -72,14 +73,15 @@ Filtering uses FetchXML via Power Pages `/_api` (`webapi.safeAjax`). Display nam
 
 6. **Configure property values** on the form control so they match your schema, for example:
    - `targetEntityLogicalName`: `akatable`
+   - `targetEntitySetName`: `akatables`
    - `lookupFieldLogicalName`: `fc_applican`
    - `filterAttributeLogicalName`: `fc_contact`
 
 ## Runtime behavior
 
 - Reads the sibling lookup GUID via Power Pages Client API (`$pages`) when available, otherwise portal DOM.
-- Loads rows with `webapi.safeAjax` → `GET /_api/{entitySet}?fetchXml=...` filtered by the lookup GUID.
-- Create/update/delete use `POST` / `PATCH` / `DELETE` on `/_api/{entitySet}`; create binds the filter lookup (e.g. `/contacts({guid})`).
+- Loads rows with `webapi.safeAjax` → `GET /_api/{targetEntitySetName}?fetchXml=...` filtered by the lookup GUID.
+- Create/update/delete use `POST` / `PATCH` / `DELETE` on `/_api/{targetEntitySetName}`; create binds the filter lookup (e.g. `/contacts({guid})`).
 - Changing the lookup reloads page 1 of the grid.
 
 ## Notes
@@ -87,4 +89,4 @@ Filtering uses FetchXML via Power Pages `/_api` (`webapi.safeAjax`). Display nam
 - Power Pages does not support multi-field PCF binding; the placeholder text column is required as the host.
 - Do not enable Device/Utility `uses-feature` flags; they are unsupported on Power Pages.
 - Column editors in the create/edit panel are text inputs in v1 (suitable for text/number-as-text). Extend `RecordForm` for option sets/dates as needed.
-- Entity set names are pluralized in code (`akatable` → `akatables`). If your site uses a different set name, tell us so we can map it.
+- Set `targetEntitySetName` to the exact plural set your portal uses (e.g. `akatables`). After adding this property, remove and re-add the control on the form so the new field appears.

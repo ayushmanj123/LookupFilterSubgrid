@@ -1,8 +1,10 @@
 export interface ControlConfig {
   lookupFieldLogicalName: string;
   targetEntityLogicalName: string;
+  /** OData/Web API plural set name for /_api (e.g. akatables). */
+  targetEntitySetName: string;
   filterAttributeLogicalName: string;
-  /** Resolved at runtime from metadata (not a manifest property). */
+  /** Runtime default for create bind (e.g. contacts). */
   filterLookupEntitySetName: string;
   /** Resolved at runtime: primary name + createdon. */
   displayColumns: string[];
@@ -23,6 +25,7 @@ export function getMissingConfigFields(config: ControlConfig): string[] {
   const missing: string[] = [];
   if (!config.lookupFieldLogicalName) missing.push("lookupFieldLogicalName");
   if (!config.targetEntityLogicalName) missing.push("targetEntityLogicalName");
+  if (!config.targetEntitySetName) missing.push("targetEntitySetName");
   if (!config.filterAttributeLogicalName) missing.push("filterAttributeLogicalName");
   return missing;
 }

@@ -133,6 +133,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.config = {
       lookupFieldLogicalName: (p.lookupFieldLogicalName.raw || "").trim(),
       targetEntityLogicalName: (p.targetEntityLogicalName.raw || "").trim(),
+      targetEntitySetName: (p.targetEntitySetName.raw || "").trim(),
       filterAttributeLogicalName: (p.filterAttributeLogicalName.raw || "").trim(),
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: this.config?.displayColumns?.length
@@ -217,7 +218,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.emptyState.show(
         `PCF is loaded, but these properties are empty: ${stillMissing.join(
           ", "
-        )}. Set targetEntityLogicalName, lookupFieldLogicalName, and filterAttributeLogicalName on the form component.`
+        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, and filterAttributeLogicalName on the form component.`
       );
       return;
     }
@@ -296,6 +297,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private applyDemoDefaults(config: ControlConfig): void {
     if (!config.lookupFieldLogicalName) config.lookupFieldLogicalName = "fc_applican";
     if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "akatable";
+    if (!config.targetEntitySetName) config.targetEntitySetName = "akatables";
     if (!config.filterAttributeLogicalName) config.filterAttributeLogicalName = "fc_contact";
     config.primaryNameAttribute = "name";
     config.displayColumns = ["name", "createdon"];
@@ -357,6 +359,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     try {
       const full = await this.dataService.retrieveRecord(
         this.config.targetEntityLogicalName,
+        this.config.targetEntitySetName,
         record.id,
         editColumns
       );
@@ -411,10 +414,15 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       );
 
       if (isCreate) {
-        await this.dataService.createRecord(this.config.targetEntityLogicalName, payload);
+        await this.dataService.createRecord(
+          this.config.targetEntityLogicalName,
+          this.config.targetEntitySetName,
+          payload
+        );
       } else if (this.editingRecordId) {
         await this.dataService.updateRecord(
           this.config.targetEntityLogicalName,
+          this.config.targetEntitySetName,
           this.editingRecordId,
           payload
         );
@@ -457,7 +465,11 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
 
     this.grid?.setLoading(true, "Deleting...");
     try {
-      await this.dataService.deleteRecord(this.config.targetEntityLogicalName, record.id);
+      await this.dataService.deleteRecord(
+        this.config.targetEntityLogicalName,
+        this.config.targetEntitySetName,
+        record.id
+      );
       if (this.records.length <= 1 && this.pageNumber > 1) {
         this.pageNumber -= 1;
       }
