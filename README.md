@@ -11,22 +11,24 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 ## Download and import into CRM / Dataverse
 
-1. Download **[LookupFilteredSubgridSolution_1_3_2_0.zip](dist/LookupFilteredSubgridSolution_1_3_2_0.zip)** from this repo.
+1. Download **[LookupFilteredSubgridSolution_1_4_0_0.zip](dist/LookupFilteredSubgridSolution_1_4_0_0.zip)** from this repo.
 2. **Remove** any previous version of this control from the Contact form → Save & Publish.
 3. Import the ZIP → Publish customizations.
 4. Re-add the control (**CustomPCF** publisher / `cpf_CustomPCF.PCF.LookupFilteredSubgrid`) on a Single Line Text placeholder field and set the properties below.
 
-## Control properties (v1.3.2)
+## Control properties (v1.4.0)
 
 | Property | Example | Meaning |
 |----------|---------|---------|
 | Bound `value` | Placeholder text column on Contact | Host field for the PCF |
-| `targetEntityLogicalName` | `akatable` | Subgrid table logical name |
-| `targetEntitySetName` | `akatables` | OData / Web API entity set for `/_api` |
+| `targetEntityLogicalName` | `mcshhs_akaname` | Subgrid table logical name |
+| `targetEntitySetName` | `mcshhs_akanames` | OData / Web API entity set for `/_api` |
 | `lookupFieldLogicalName` | `fc_applican` | Lookup on the Contact form |
 | `filterAttributeLogicalName` | `fc_contact` | Lookup on the subgrid table |
 
-Filtering uses **FetchXML** via Power Pages `webapi.safeAjax` → `/_api/{targetEntitySetName}`.
+List loads use **OData only** via `webapi.safeAjax` (no FetchXML), for example:
+
+`GET /_api/mcshhs_akanames?$select=name,createdon&$filter=_fc_contact_value eq GUID and statecode eq 0&$orderby=createdon desc&$top=10`
 
 ## Build
 
@@ -39,7 +41,7 @@ cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
 
-Import `dist/LookupFilteredSubgridSolution_1_3_2_0.zip`, then publish customizations.
+Import `dist/LookupFilteredSubgridSolution_1_4_0_0.zip`, then publish customizations.
 
 ## Notes
 

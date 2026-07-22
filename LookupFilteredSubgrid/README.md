@@ -45,7 +45,7 @@ Import the generated zip into your environment, then publish customizations.
 | `lookupFieldLogicalName` | Yes | Lookup on the primary form (e.g. `fc_applican`) |
 | `filterAttributeLogicalName` | Yes | Lookup on the subgrid table (e.g. `fc_contact`) |
 
-Filtering uses FetchXML via Power Pages `/_api` (`webapi.safeAjax`). Display name defaults to `name`; create bind uses the `contacts` entity set.
+Filtering uses OData via Power Pages `/_api` (`webapi.safeAjax`) with a centralized query builder (`$select`, `$filter`, `$orderby`, `$top`/`$skip`). Display name defaults to `name`; create bind uses the `contacts` entity set.
 
 ## Power Pages setup
 
@@ -80,7 +80,8 @@ Filtering uses FetchXML via Power Pages `/_api` (`webapi.safeAjax`). Display nam
 ## Runtime behavior
 
 - Reads the sibling lookup GUID via Power Pages Client API (`$pages`) when available, otherwise portal DOM.
-- Loads rows with `webapi.safeAjax` → `GET /_api/{targetEntitySetName}?$filter=_lookup_value eq {guid}` (OData; not FetchXML).
+- Loads rows with `webapi.safeAjax` →  
+  `GET /_api/{targetEntitySetName}?$select=...&$filter=_lookup_value eq GUID and statecode eq 0&$orderby=createdon desc&$top=10`
 - Create/update/delete use `POST` / `PATCH` / `DELETE` on `/_api/{targetEntitySetName}`; create binds the filter lookup (e.g. `/contacts({guid})`).
 - Changing the lookup reloads page 1 of the grid.
 

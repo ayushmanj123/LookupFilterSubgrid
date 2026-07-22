@@ -1,12 +1,21 @@
 import assert from "node:assert/strict";
 import {
-  buildPortalListQuery,
   createDemoRecords,
-  escapeXml,
   getMissingConfigFields,
   normalizeGuid,
   ControlConfig,
 } from "../LookupFilteredSubgrid/types";
+import {
+  and,
+  buildApiUrl,
+  buildODataQueryString,
+  buildRecordUrl,
+  eq,
+  lookupEq,
+  not,
+  or,
+  toFilterString,
+} from "../LookupFilteredSubgrid/services/odata/ODataQuery";
 
 function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
   return {
@@ -39,23 +48,48 @@ assert.equal(
 );
 assert.equal(normalizeGuid("bad"), null);
 
-assert.equal(escapeXml(`a&b<c>`), "a&amp;b&lt;c&gt;");
+const guid = "11111111-1111-1111-1111-111111111111";
+const filter = and(lookupEq("fc_contact", guid), eq("statecode", 0));
+assert.equal(
+  toFilterString(filter),
+  "(_fc_contact_value eq 11111111-1111-1111-1111-111111111111) and (statecode eq 0)"
+);
+assert.ok(toFilterString(or(eq("statuscode", 1), eq("statuscode", 2))).includes(" or "));
+assert.equal(toFilterString(not(eq("statecode", 1))), "not (statecode eq 1)");
 
-const listQuery = buildPortalListQuery(
-  "fc_contact",
-  "11111111-1111-1111-1111-111111111111",
-  10,
-  2
+const query = buildODataQueryString({
+  select: ["name", "createdon"],
+  filter,
+  orderby: [{ field: "createdon", direction: "desc" }],
+  top: 10,
+  skip: 10,
+});
+assert.ok(query.startsWith("?"));
+assert.ok(query.includes("$select="));
+assert.ok(query.includes("$filter="));
+assert.ok(query.includes("$orderby="));
+assert.ok(query.includes("$top=10"));
+assert.ok(query.includes("$skip=10"));
+assert.ok(!query.toLowerCase().includes("fetchxml"));
+
+const listUrl = buildApiUrl("mcshhs_akanames", {
+  select: ["name"],
+  filter: lookupEq("fc_contact", guid),
+  top: 10,
+});
+assert.equal(
+  listUrl.startsWith("/_api/mcshhs_akanames?"),
+  true
 );
-assert.ok(listQuery.startsWith("?"));
-assert.ok(listQuery.includes("$filter="));
-assert.ok(
-  listQuery.includes(
-    encodeURIComponent("_fc_contact_value eq 11111111-1111-1111-1111-111111111111")
-  )
+assert.ok(listUrl.includes("$filter="));
+
+const recordUrl = buildRecordUrl("mcshhs_akanames", `{${guid}}`, {
+  select: ["name", "createdon"],
+});
+assert.equal(
+  recordUrl,
+  `/_api/mcshhs_akanames(${guid})?$select=${encodeURIComponent("name,createdon")}`
 );
-assert.ok(listQuery.includes("$top=10"));
-assert.ok(listQuery.includes("$skip=10"));
 
 const demo = createDemoRecords(baseConfig({ useDemoData: true }));
 assert.equal(demo.length, 3);

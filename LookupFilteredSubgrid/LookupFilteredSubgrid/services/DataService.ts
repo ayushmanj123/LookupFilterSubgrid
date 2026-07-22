@@ -1,9 +1,11 @@
+import { ControlConfig, EntityRecord, LoadResult } from "../types";
 import {
-  buildPortalListQuery,
-  ControlConfig,
-  EntityRecord,
-  LoadResult,
-} from "../types";
+  and,
+  buildApiUrl,
+  buildRecordUrl,
+  eq,
+  lookupEq,
+} from "./odata/ODataQuery";
 import { PortalApi } from "./PortalApi";
 
 export class DataService {
@@ -14,21 +16,27 @@ export class DataService {
     filterGuid: string,
     pageNumber: number
   ): Promise<LoadResult> {
-    const entitySet = this.normalizeEntitySet(config.targetEntitySetName);
-    const query = buildPortalListQuery(
-      config.filterAttributeLogicalName,
-      filterGuid,
-      config.pageSize,
-      pageNumber
-    );
-    // Same pattern as portal console: GET /_api/{entitySet} — with OData $filter (not FetchXML).
-    const url = `/_api/${entitySet}${query}`;
+    const pageSize = Math.max(1, config.pageSize);
+    const page = Math.max(1, pageNumber);
+    const skip = (page - 1) * pageSize;
+    const select = (config.displayColumns || []).filter(Boolean);
+
+    const url = buildApiUrl(config.targetEntitySetName, {
+      select: select.length ? select : undefined,
+      filter: and(
+        lookupEq(config.filterAttributeLogicalName, filterGuid),
+        eq("statecode", 0)
+      ),
+      orderby: [{ field: "createdon", direction: "desc" }],
+      top: pageSize,
+      skip: skip > 0 ? skip : undefined,
+    });
+
     const response = await this.api.get(url);
     const entities = this.extractEntities(response.data).map((e) =>
       this.normalizeEntity(e, config)
     );
 
-    const pageSize = Math.max(1, config.pageSize);
     return {
       entities,
       hasMore: entities.length >= pageSize,
@@ -41,16 +49,17 @@ export class DataService {
     recordId: string,
     columns: string[]
   ): Promise<EntityRecord> {
-    const entitySet = this.normalizeEntitySet(entitySetName);
-    const id = this.stripGuid(recordId);
-    const select = columns.filter(Boolean).join(",");
-    const query = select ? `?$select=${encodeURIComponent(select)}` : "";
-    const response = await this.api.get(`/_api/${entitySet}(${id})${query}`);
+    const url = buildRecordUrl(entitySetName, recordId, {
+      select: columns.filter(Boolean),
+    });
+    const response = await this.api.get(url);
     const record =
       response.data && typeof response.data === "object"
         ? (response.data as Record<string, unknown>)
         : {};
-    return this.normalizeEntity(record, { targetEntityLogicalName: entityLogicalName } as ControlConfig);
+    return this.normalizeEntity(record, {
+      targetEntityLogicalName: entityLogicalName,
+    } as ControlConfig);
   }
 
   public async createRecord(
@@ -58,8 +67,8 @@ export class DataService {
     entitySetName: string,
     data: Record<string, unknown>
   ): Promise<string> {
-    const entitySet = this.normalizeEntitySet(entitySetName);
-    const response = await this.api.post(`/_api/${entitySet}`, data);
+    const url = buildApiUrl(entitySetName);
+    const response = await this.api.post(url, data);
 
     const fromHeader =
       response.getResponseHeader("entityid") ||
@@ -91,9 +100,9 @@ export class DataService {
     recordId: string,
     data: Record<string, unknown>
   ): Promise<void> {
-    const entitySet = this.normalizeEntitySet(entitySetName);
-    const id = this.stripGuid(recordId);
-    await this.api.patch(`/_api/${entitySet}(${id})`, data);
+    void entityLogicalName;
+    const url = buildRecordUrl(entitySetName, recordId);
+    await this.api.patch(url, data);
   }
 
   public async deleteRecord(
@@ -102,9 +111,8 @@ export class DataService {
     recordId: string
   ): Promise<void> {
     void entityLogicalName;
-    const entitySet = this.normalizeEntitySet(entitySetName);
-    const id = this.stripGuid(recordId);
-    await this.api.del(`/_api/${entitySet}(${id})`);
+    const url = buildRecordUrl(entitySetName, recordId);
+    await this.api.del(url);
   }
 
   public buildWritePayload(
@@ -141,10 +149,6 @@ export class DataService {
     }
 
     return payload;
-  }
-
-  private normalizeEntitySet(entitySetName: string): string {
-    return (entitySetName || "").trim().replace(/^\//, "");
   }
 
   private extractEntities(data: unknown): Array<Record<string, unknown>> {
