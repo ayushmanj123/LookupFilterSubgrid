@@ -5,7 +5,6 @@ import {
   EntityRecord,
   LoadResult,
 } from "../types";
-import { agentLog } from "./debugLog";
 
 export class DataService {
   private entityMetaCache = new Map<string, EntityMetadataInfo>();
@@ -30,28 +29,13 @@ export class DataService {
         primaryNameAttribute: String(row?.PrimaryNameAttribute || "name"),
         entitySetName: String(row?.EntitySetName || this.guessEntitySetName(entityLogicalName)),
       };
-      // #region agent log
-      agentLog("A", "DataService.ts:resolveEntityMetadata", "metadata resolved", {
-        entityLogicalName,
-        primaryNameAttribute: info.primaryNameAttribute,
-        entitySetName: info.entitySetName,
-        fromApi: !!row,
-      });
-      // #endregion
       this.entityMetaCache.set(key, info);
       return info;
-    } catch (err) {
+    } catch {
       const fallback: EntityMetadataInfo = {
         primaryNameAttribute: "name",
         entitySetName: this.guessEntitySetName(entityLogicalName),
       };
-      // #region agent log
-      agentLog("A", "DataService.ts:resolveEntityMetadata", "metadata failed, using fallback", {
-        entityLogicalName,
-        fallbackPrimary: fallback.primaryNameAttribute,
-        err: err instanceof Error ? err.message : String(err),
-      });
-      // #endregion
       this.entityMetaCache.set(key, fallback);
       return fallback;
     }
@@ -75,7 +59,6 @@ export class DataService {
         "EntityDefinitions",
         `?$filter=LogicalName eq '${entityLogicalName}'&$expand=Attributes($filter=LogicalName eq '${filterAttributeLogicalName}';$select=LogicalName;$expand=Targets)`
       );
-      // Portal / PCF may not support complex expand; fall through on failure.
       const entity = result.entities?.[0] as Record<string, unknown> | undefined;
       const attributes = entity?.Attributes as Array<Record<string, unknown>> | undefined;
       const attr = attributes?.[0];
@@ -90,7 +73,6 @@ export class DataService {
       // Fall through to contact default / guess
     }
 
-    // Contact form scenario default
     const fallback = "contacts";
     this.lookupTargetSetCache.set(cacheKey, fallback);
     return fallback;
@@ -111,119 +93,20 @@ export class DataService {
     );
 
     const options = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-    // #region agent log
-    agentLog("C", "DataService.ts:loadRecords", "about to call retrieveMultipleRecords FetchXML", {
-      targetEntityLogicalName: config.targetEntityLogicalName,
-      filterAttributeLogicalName: config.filterAttributeLogicalName,
-      primaryNameAttribute: config.primaryNameAttribute,
-      filterGuidLen: filterGuid ? filterGuid.length : 0,
-      pageNumber,
-      fetchXml,
-      optionsPrefix: options.slice(0, 40),
-    });
-    // #endregion
+    const result = await this.webAPI.retrieveMultipleRecords(
+      config.targetEntityLogicalName,
+      options
+    );
 
-    try {
-      const result = await this.webAPI.retrieveMultipleRecords(
-        config.targetEntityLogicalName,
-        options
-      );
+    const entities = (result.entities || []).map((e) => this.normalizeEntity(e, config));
+    const pageSize = Math.max(1, config.pageSize);
+    const hasMore = entities.length >= pageSize;
 
-      const entities = (result.entities || []).map((e) => this.normalizeEntity(e, config));
-      const pageSize = Math.max(1, config.pageSize);
-      const hasMore = entities.length >= pageSize;
-
-      // #region agent log
-      agentLog("C", "DataService.ts:loadRecords", "FetchXML success", {
-        count: entities.length,
-        hasMore,
-        sampleKeys: entities[0] ? Object.keys(entities[0]).slice(0, 12) : [],
-      });
-      // #endregion
-
-      return {
-        entities,
-        nextLink: result.nextLink,
-        hasMore,
-      };
-    } catch (err) {
-      const anyErr = err as {
-        message?: string;
-        errorCode?: number;
-        status?: number;
-        raw?: string;
-        error?: { message?: string; code?: string };
-      };
-      // #region agent log
-      agentLog("B", "DataService.ts:loadRecords", "FetchXML failed", {
-        message: anyErr?.message || anyErr?.error?.message || String(err),
-        errorCode: anyErr?.errorCode,
-        status: anyErr?.status,
-        raw: anyErr?.raw ? String(anyErr.raw).slice(0, 500) : undefined,
-        code: anyErr?.error?.code,
-        targetEntityLogicalName: config.targetEntityLogicalName,
-        primaryNameAttribute: config.primaryNameAttribute,
-        filterAttributeLogicalName: config.filterAttributeLogicalName,
-        fetchXml,
-      });
-      // #endregion
-
-      // Secondary probe: OData $filter without createdon (hypotheses B/C/E)
-      const odataOptions =
-        `?$select=${encodeURIComponent(config.primaryNameAttribute || "name")}` +
-        `&$filter=${encodeURIComponent(
-          `_${config.filterAttributeLogicalName}_value eq ${filterGuid.replace(/[{}]/g, "")}`
-        )}` +
-        `&$top=10`;
-      // #region agent log
-      agentLog("E", "DataService.ts:loadRecords", "probing OData fallback", {
-        odataOptions,
-        entitySetGuess: this.guessEntitySetName(config.targetEntityLogicalName),
-      });
-      // #endregion
-      try {
-        const odataResult = await this.webAPI.retrieveMultipleRecords(
-          config.targetEntityLogicalName,
-          odataOptions
-        );
-        // #region agent log
-        agentLog("E", "DataService.ts:loadRecords", "OData probe SUCCESS", {
-          count: odataResult.entities?.length ?? 0,
-        });
-        // #endregion
-      } catch (odataErr) {
-        const oe = odataErr as { message?: string; error?: { message?: string } };
-        // #region agent log
-        agentLog("E", "DataService.ts:loadRecords", "OData probe FAILED", {
-          message: oe?.message || oe?.error?.message || String(odataErr),
-        });
-        // #endregion
-
-        // Probe with entity set name if different (hypothesis E)
-        const setName = this.guessEntitySetName(config.targetEntityLogicalName);
-        if (setName !== config.targetEntityLogicalName) {
-          try {
-            const setResult = await this.webAPI.retrieveMultipleRecords(setName, odataOptions);
-            // #region agent log
-            agentLog("E", "DataService.ts:loadRecords", "OData probe with entitySet SUCCESS", {
-              setName,
-              count: setResult.entities?.length ?? 0,
-            });
-            // #endregion
-          } catch (setErr) {
-            const se = setErr as { message?: string };
-            // #region agent log
-            agentLog("E", "DataService.ts:loadRecords", "OData probe with entitySet FAILED", {
-              setName,
-              message: se?.message || String(setErr),
-            });
-            // #endregion
-          }
-        }
-      }
-
-      throw err;
-    }
+    return {
+      entities,
+      nextLink: result.nextLink,
+      hasMore,
+    };
   }
 
   public async retrieveRecord(

@@ -11,7 +11,7 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 ## Download and import into CRM / Dataverse
 
-1. Download **[LookupFilteredSubgridSolution_1_2_0_0.zip](dist/LookupFilteredSubgridSolution_1_2_0_0.zip)** from this repo.
+1. Download **[LookupFilteredSubgridSolution_1_2_2_0.zip](dist/LookupFilteredSubgridSolution_1_2_2_0.zip)** from this repo.
 2. **Remove** any previous version of this control from the Contact form → Save & Publish.
 3. Import the ZIP → Publish customizations.
 4. Re-add the control (**Ayush** publisher / `ayu_Ayush.PCF.LookupFilteredSubgrid`) on a Single Line Text placeholder field and set the **3 properties** below.

@@ -4,7 +4,6 @@ import { confirmDelete, RecordForm } from "./components/RecordForm";
 import { GridView } from "./components/GridView";
 import { DataService } from "./services/DataService";
 import { LookupResolver } from "./services/LookupResolver";
-import { agentLog, formatAgentDebugForUi } from "./services/debugLog";
 import {
   ControlConfig,
   createDemoRecords,
@@ -262,17 +261,6 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.filterGuid =
       this.lookupResolver.getLookupGuid(config.lookupFieldLogicalName) || this.filterGuid;
 
-    // #region agent log
-    agentLog("D", "index.ts:reload", "filter guid resolution", {
-      lookupField: config.lookupFieldLogicalName,
-      hasGuid: !!this.filterGuid,
-      guidPrefix: this.filterGuid ? this.filterGuid.slice(0, 8) : null,
-      target: config.targetEntityLogicalName,
-      filterAttr: config.filterAttributeLogicalName,
-      primaryName: config.primaryNameAttribute,
-    });
-    // #endregion
-
     if (!this.filterGuid) {
       this.records = [];
       this.hasNextPage = false;
@@ -311,14 +299,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       );
     } catch (err) {
       const message = this.errorMessage(err, "Failed to load related records.");
-      // #region agent log
-      agentLog("B", "index.ts:reload", "loadRecords catch", {
-        message,
-        debugUi: formatAgentDebugForUi().slice(0, 800),
-      });
-      // #endregion
       this.grid.setError(
-        `${message} Check Power Pages Web API site settings and table permissions for "${config.targetEntityLogicalName}".${formatAgentDebugForUi()}`
+        `${message} Check Power Pages Web API site settings and table permissions for "${config.targetEntityLogicalName}".`
       );
       this.grid.render(config, [], this.pageNumber, false, "Unable to load records.");
     } finally {
