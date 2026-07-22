@@ -2,14 +2,17 @@ import { IInputs, IOutputs } from "./generated/ManifestTypes";
 import { EmptyState } from "./components/EmptyState";
 import { confirmDelete, RecordForm } from "./components/RecordForm";
 import { GridView } from "./components/GridView";
+import { PortalFormModal } from "./components/PortalFormModal";
 import { DataService } from "./services/DataService";
 import { LookupResolver } from "./services/LookupResolver";
 import {
   ControlConfig,
   createDemoRecords,
+  EMPTY_GUID,
   EntityRecord,
   getMissingConfigFields,
   RecordFormValues,
+  resolvePortalRecordId,
 } from "./types";
 
 export class LookupFilteredSubgrid implements ComponentFramework.StandardControl<IInputs, IOutputs> {
@@ -22,6 +25,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private grid: GridView | null = null;
   private emptyState: EmptyState | null = null;
   private recordForm: RecordForm | null = null;
+  private portalFormModal: PortalFormModal | null = null;
   private fatalEl: HTMLDivElement | null = null;
 
   private config: ControlConfig | null = null;
@@ -74,6 +78,10 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         onCancel: () => this.recordForm?.close(),
       });
 
+      this.portalFormModal = new PortalFormModal(this.container, {
+        onClosed: () => void this.reload(),
+      });
+
       this.applyConfig(context);
       this.setupLookupWatch();
       void this.reload();
@@ -119,10 +127,12 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.grid?.destroy();
     this.emptyState?.destroy();
     this.recordForm?.destroy();
+    this.portalFormModal?.destroy();
     this.fatalEl?.remove();
     this.grid = null;
     this.emptyState = null;
     this.recordForm = null;
+    this.portalFormModal = null;
     this.dataService = null;
     this.fatalEl = null;
   }
@@ -135,6 +145,9 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       targetEntityLogicalName: (p.targetEntityLogicalName.raw || "").trim(),
       targetEntitySetName: (p.targetEntitySetName.raw || "").trim(),
       filterAttributeLogicalName: (p.filterAttributeLogicalName.raw || "").trim(),
+      portalId: (p.portalId.raw || "").trim() || EMPTY_GUID,
+      recordId: resolvePortalRecordId(p.recordId.raw),
+      entityFormId: (p.entityFormId.raw || "").trim(),
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: this.config?.displayColumns?.length
         ? this.config.displayColumns
@@ -226,7 +239,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.emptyState.show(
         `PCF is loaded, but these properties are empty: ${stillMissing.join(
           ", "
-        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, and filterAttributeLogicalName on the form component.`
+        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, filterAttributeLogicalName, portalId, and entityFormId on the form component.`
       );
       return;
     }
@@ -307,6 +320,9 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "mcshhs_akaname";
     if (!config.targetEntitySetName) config.targetEntitySetName = "mcshhs_akanames";
     if (!config.filterAttributeLogicalName) config.filterAttributeLogicalName = "fc_contact";
+    if (!config.portalId) config.portalId = EMPTY_GUID;
+    if (!config.recordId) config.recordId = EMPTY_GUID;
+    if (!config.entityFormId) config.entityFormId = EMPTY_GUID;
     config.primaryNameAttribute = "mcshhs_akaname";
     config.displayColumns = [
       "mcshhs_akaname",
@@ -326,7 +342,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   }
 
   private openCreate(): void {
-    if (!this.config || !this.recordForm) {
+    if (!this.config || !this.portalFormModal) {
       return;
     }
     if (!this.filterGuid) {
@@ -337,13 +353,21 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.grid?.setError("Create is disabled in demo data mode.");
       return;
     }
+    if (!this.config.entityFormId) {
+      this.grid?.setError(
+        "Set entityFormId (Insert Basic Form GUID) and portalId on the control to open the create form."
+      );
+      return;
+    }
+
     this.editingRecordId = null;
-    const editColumns = ["mcshhs_akaname", "mcshhs_firstname"];
-    const editConfig = {
-      ...this.config,
-      displayColumns: editColumns,
-    };
-    this.recordForm.open("create", editConfig, {});
+    this.grid?.setError(null);
+    this.portalFormModal.openCreate({
+      portalId: this.config.portalId || EMPTY_GUID,
+      recordId: resolvePortalRecordId(this.config.recordId),
+      entityFormId: this.config.entityFormId,
+      title: "Create",
+    });
   }
 
   private async openEdit(record: EntityRecord): Promise<void> {

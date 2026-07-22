@@ -9,6 +9,9 @@ export interface GridViewCallbacks {
   onRefresh: () => void;
 }
 
+/**
+ * Grid chrome styled like a Power Pages List (entity-grid + Bootstrap).
+ */
 export class GridView {
   private root: HTMLDivElement;
   private tableBody: HTMLTableSectionElement;
@@ -24,51 +27,55 @@ export class GridView {
     private readonly callbacks: GridViewCallbacks
   ) {
     this.root = document.createElement("div");
-    this.root.className = "lfs-root";
+    this.root.className = "lfs-host-inner entitylist";
+
+    const grid = document.createElement("div");
+    grid.className = "entity-grid";
 
     const toolbar = document.createElement("div");
-    toolbar.className = "lfs-toolbar";
+    toolbar.className = "view-toolbar grid-actions clearfix";
 
     const title = document.createElement("div");
-    title.className = "lfs-title";
+    title.className = "view-title pull-left";
     title.textContent = "Related records";
     toolbar.appendChild(title);
 
     const actions = document.createElement("div");
-    actions.className = "lfs-toolbar-actions";
+    actions.className = "toolbar-actions pull-right";
 
     const refreshBtn = document.createElement("button");
     refreshBtn.type = "button";
-    refreshBtn.className = "lfs-btn lfs-btn-secondary";
+    refreshBtn.className = "btn btn-default";
     refreshBtn.textContent = "Refresh";
     refreshBtn.addEventListener("click", () => this.callbacks.onRefresh());
     actions.appendChild(refreshBtn);
 
     this.createBtn = document.createElement("button");
     this.createBtn.type = "button";
-    this.createBtn.className = "lfs-btn lfs-btn-primary";
-    this.createBtn.textContent = "New";
+    this.createBtn.className = "btn btn-primary create-action";
+    this.createBtn.textContent = "Create";
     this.createBtn.addEventListener("click", () => this.callbacks.onCreate());
     actions.appendChild(this.createBtn);
 
     toolbar.appendChild(actions);
-    this.root.appendChild(toolbar);
+    grid.appendChild(toolbar);
 
     this.errorEl = document.createElement("div");
-    this.errorEl.className = "lfs-error";
+    this.errorEl.className = "alert alert-danger";
+    this.errorEl.setAttribute("role", "alert");
     this.errorEl.hidden = true;
-    this.root.appendChild(this.errorEl);
+    grid.appendChild(this.errorEl);
 
     this.statusEl = document.createElement("div");
-    this.statusEl.className = "lfs-status";
+    this.statusEl.className = "text-muted lfs-status";
     this.statusEl.hidden = true;
-    this.root.appendChild(this.statusEl);
+    grid.appendChild(this.statusEl);
 
     const tableWrap = document.createElement("div");
-    tableWrap.className = "lfs-table-wrap";
+    tableWrap.className = "view-grid table-responsive";
 
     const table = document.createElement("table");
-    table.className = "lfs-table";
+    table.className = "table table-striped table-hover";
     table.setAttribute("role", "grid");
 
     const thead = document.createElement("thead");
@@ -79,37 +86,37 @@ export class GridView {
     table.appendChild(this.tableBody);
 
     tableWrap.appendChild(table);
-    this.root.appendChild(tableWrap);
+    grid.appendChild(tableWrap);
 
     const pager = document.createElement("div");
-    pager.className = "lfs-pager";
+    pager.className = "view-pagination clearfix";
 
     this.prevBtn = document.createElement("button");
     this.prevBtn.type = "button";
-    this.prevBtn.className = "lfs-btn lfs-btn-secondary";
+    this.prevBtn.className = "btn btn-default";
     this.prevBtn.textContent = "Previous";
     this.prevBtn.addEventListener("click", () => this.callbacks.onPrevPage());
     pager.appendChild(this.prevBtn);
 
     this.pagerInfo = document.createElement("span");
-    this.pagerInfo.className = "lfs-pager-info";
+    this.pagerInfo.className = "page-info text-muted";
     pager.appendChild(this.pagerInfo);
 
     this.nextBtn = document.createElement("button");
     this.nextBtn.type = "button";
-    this.nextBtn.className = "lfs-btn lfs-btn-secondary";
+    this.nextBtn.className = "btn btn-default";
     this.nextBtn.textContent = "Next";
     this.nextBtn.addEventListener("click", () => this.callbacks.onNextPage());
     pager.appendChild(this.nextBtn);
 
-    this.root.appendChild(pager);
+    grid.appendChild(pager);
+    this.root.appendChild(grid);
     this.container.appendChild(this.root);
   }
 
   public setLoading(isLoading: boolean, message = "Loading..."): void {
     this.statusEl.hidden = !isLoading;
     this.statusEl.textContent = message;
-    this.statusEl.classList.toggle("lfs-status-loading", isLoading);
   }
 
   public setError(message: string | null): void {
@@ -146,7 +153,7 @@ export class GridView {
     if (config.enableEdit || config.enableDelete) {
       const th = document.createElement("th");
       th.scope = "col";
-      th.className = "lfs-actions-col";
+      th.className = "actions";
       th.textContent = "Actions";
       headerRow.appendChild(th);
     }
@@ -157,8 +164,9 @@ export class GridView {
     if (!records.length) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = config.displayColumns.length + (config.enableEdit || config.enableDelete ? 1 : 0);
-      td.className = "lfs-empty-cell";
+      td.colSpan =
+        config.displayColumns.length + (config.enableEdit || config.enableDelete ? 1 : 0);
+      td.className = "text-muted text-center";
       td.textContent = emptyMessage || "No related records found.";
       tr.appendChild(td);
       this.tableBody.appendChild(tr);
@@ -174,12 +182,12 @@ export class GridView {
 
         if (config.enableEdit || config.enableDelete) {
           const td = document.createElement("td");
-          td.className = "lfs-actions-col";
+          td.className = "actions";
 
           if (config.enableEdit) {
             const editBtn = document.createElement("button");
             editBtn.type = "button";
-            editBtn.className = "lfs-btn lfs-btn-link";
+            editBtn.className = "btn btn-link edit-link";
             editBtn.textContent = "Edit";
             editBtn.addEventListener("click", () => this.callbacks.onEdit(record));
             td.appendChild(editBtn);
@@ -188,7 +196,7 @@ export class GridView {
           if (config.enableDelete) {
             const deleteBtn = document.createElement("button");
             deleteBtn.type = "button";
-            deleteBtn.className = "lfs-btn lfs-btn-link lfs-btn-danger";
+            deleteBtn.className = "btn btn-link delete-link text-danger";
             deleteBtn.textContent = "Delete";
             deleteBtn.addEventListener("click", () => this.callbacks.onDelete(record));
             td.appendChild(deleteBtn);

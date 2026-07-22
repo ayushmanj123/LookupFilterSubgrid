@@ -1,93 +1,41 @@
 # Lookup Filtered Subgrid (Power Pages PCF)
 
-Field-bound Power Apps Component Framework control that displays related Dataverse records filtered by a **lookup value on the same form** (for example, Applicant 2). Supports **view, create, edit, and delete** via the portal Web API.
-
-## Project layout
-
-```text
-LookupFilteredSubgrid/                 # PCF project root
-  LookupFilteredSubgrid/               # Control source
-    ControlManifest.Input.xml
-    index.ts
-    components/
-    services/
-  package.json
-LookupFilteredSubgridSolution/         # Dataverse solution package (optional packaging)
-```
-
-## Build
-
-```powershell
-cd LookupFilteredSubgrid
-npm install
-npm run build
-```
-
-Output bundle: `LookupFilteredSubgrid/out/controls/LookupFilteredSubgrid/`.
-
-To package into a Dataverse solution, use Power Platform CLI once installed:
-
-```powershell
-pac solution init --publisher-name CustomPCF --publisher-prefix cpf --outputDirectory LookupFilteredSubgridSolution
-pac solution add-reference --path LookupFilteredSubgrid --outputDirectory LookupFilteredSubgridSolution
-msbuild LookupFilteredSubgridSolution /p:Configuration=Release
-```
-
-Import the generated zip into your environment, then publish customizations.
+Field-bound Power Apps Component Framework control that displays related Dataverse records filtered by a **lookup value on the same form**. List load uses OData `/_api`; **Create** opens a Power Pages Basic Form in an iframe modal (same pattern as List).
 
 ## Control properties
 
 | Property | Required | Description |
 |----------|----------|-------------|
 | Bound `value` | Yes | Placeholder Single Line Text column that hosts the control |
-| `targetEntityLogicalName` | Yes | Subgrid table logical name (e.g. `akatable`) |
-| `targetEntitySetName` | Yes | OData / Web API entity set name for `/_api` (e.g. `akatables`) |
+| `targetEntityLogicalName` | Yes | Subgrid table logical name (e.g. `mcshhs_akaname`) |
+| `targetEntitySetName` | Yes | OData entity set for `/_api` (e.g. `mcshhs_akanames`) |
 | `lookupFieldLogicalName` | Yes | Lookup on the primary form (e.g. `fc_applican`) |
 | `filterAttributeLogicalName` | Yes | Lookup on the subgrid table (e.g. `fc_contact`) |
+| `portalId` | Yes | Website GUID for `/_portal/modal-form-template-path/{portalId}` (empty GUID allowed) |
+| `recordId` | Yes | Form record GUID; use `00000000-0000-0000-0000-000000000000` for Insert |
+| `entityFormId` | Yes | Insert Basic Form (entity form) GUID |
 
-Filtering uses OData via Power Pages `/_api` (`webapi.safeAjax`) with a centralized query builder (`$select`, `$filter`, `$orderby`, `$top`/`$skip`). Display name defaults to `name`; create bind uses the `contacts` entity set.
+## Create (iframe)
+
+Create uses:
+
+```text
+/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}
+```
+
+Find IDs in Portal Management: **Websites** (portalId), **Basic Forms** (entityFormId). Prefill `fc_contact` on the Basic Form (default / OnLoad), not via extra PCF query params.
 
 ## Power Pages setup
 
-1. **Dataverse**
-   - Add a Single Line Text placeholder column on the form table (e.g. Contact).
-   - Add that column to the form used by Power Pages.
-   - Configure this PCF on that column (Web client).
-   - Ensure the filter lookup field (e.g. Applicant 2 / `fc_applican`) is on the same form (can be hidden).
+1. Enable the PCF on a placeholder text column; keep the filter lookup on the form.
+2. Include `webapi.safeAjax` for grid load / edit / delete.
+3. Web API site settings + table permissions for the related table.
+4. Create an **Insert** Basic Form for the related table and set `entityFormId` / `portalId` / `recordId` (empty GUID).
+5. After property changes: remove control → Save/Publish → import → re-add.
 
-2. **Enable the component on the portal form**
-   - Design Studio: open the form field → **Enable custom component**, or
-   - Portals Management → Basic Form Metadata → Type **Attribute** → Control Style **Code Component**.
+## Runtime
 
-3. **Include the Web API wrapper script** on the page (Liquid / content snippet) so `webapi.safeAjax` is available. Without it the control cannot call `/_api`.
-
-4. **Web API site settings** (Site Settings in Power Pages)
-   - Enable Web API for the **related** table with the operations you need (`Read`, `Create`, `Update`, `Delete`).
-   - Example keys (names vary by site template):
-     - `Webapi/{entitylogicalname}/enabled` = `true`
-     - `Webapi/{entitylogicalname}/fields` = `*` or the field list you expose
-
-5. **Table permissions**
-   - Grant the authenticated (or anonymous) web role **Read / Create / Write / Delete** on the related table with an appropriate scope (often **Global** or **Contact**-based, depending on your model).
-   - Also ensure the user can read the lookup target table if needed for bind resolution.
-
-6. **Configure property values** on the form control so they match your schema, for example:
-   - `targetEntityLogicalName`: `akatable`
-   - `targetEntitySetName`: `akatables`
-   - `lookupFieldLogicalName`: `fc_applican`
-   - `filterAttributeLogicalName`: `fc_contact`
-
-## Runtime behavior
-
-- Reads the sibling lookup GUID via Power Pages Client API (`$pages`) when available, otherwise portal DOM.
-- Loads rows with `webapi.safeAjax` →  
-  `GET /_api/{targetEntitySetName}?$select=...&$filter=_lookup_value eq GUID and statecode eq 0&$orderby=createdon desc&$top=10`
-- Create/update/delete use `POST` / `PATCH` / `DELETE` on `/_api/{targetEntitySetName}`; create binds the filter lookup (e.g. `/contacts({guid})`).
-- Changing the lookup reloads page 1 of the grid.
-
-## Notes
-
-- Power Pages does not support multi-field PCF binding; the placeholder text column is required as the host.
-- Do not enable Device/Utility `uses-feature` flags; they are unsupported on Power Pages.
-- Column editors in the create/edit panel are text inputs in v1 (suitable for text/number-as-text). Extend `RecordForm` for option sets/dates as needed.
-- Set `targetEntitySetName` to the exact plural set your portal uses (e.g. `akatables`). After adding this property, remove and re-add the control on the form so the new field appears.
+- Grid styled like portal List (`entity-grid`, Bootstrap `btn` / `table`).
+- Load: OData `$select` / `$filter` / `$orderby` / `$top`.
+- **Create**: Bootstrap modal + iframe Basic Form; grid reloads when the modal closes.
+- **Edit/Delete**: still Web API (edit modal / confirm) in v1.5.0.

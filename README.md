@@ -1,36 +1,36 @@
 # PCF — Lookup Filtered Subgrid
 
-Power Pages–oriented PCF control that shows related Dataverse records filtered by a lookup on the current form, with full CRUD.
+Power Pages–oriented PCF: related records filtered by a form lookup, OData list load, and **Create** via iframe Basic Form (List-style modal).
 
 | Folder | Purpose |
 |--------|---------|
-| [LookupFilteredSubgrid](LookupFilteredSubgrid/) | PCF source, build (`npm run build`), and deployment guide |
-| [LookupFilteredSubgridSolution](LookupFilteredSubgridSolution/) | Dataverse solution project referencing the control |
-| [dist/](dist/) | Ready-to-import unmanaged Dataverse solution ZIP |
-| [scripts/Build-SolutionZip.ps1](scripts/Build-SolutionZip.ps1) | Rebuilds the solution ZIP after `npm run build` |
+| [LookupFilteredSubgrid](LookupFilteredSubgrid/) | PCF source and guide |
+| [LookupFilteredSubgridSolution](LookupFilteredSubgridSolution/) | Solution project |
+| [dist/](dist/) | Importable unmanaged ZIP |
+| [scripts/Build-SolutionZip.ps1](scripts/Build-SolutionZip.ps1) | Pack after `npm run build` |
 
-## Download and import into CRM / Dataverse
+## Download
 
-1. Download **[LookupFilteredSubgridSolution_1_4_1_0.zip](dist/LookupFilteredSubgridSolution_1_4_1_0.zip)** from this repo.
-2. **Remove** any previous version of this control from the Contact form → Save & Publish.
-3. Import the ZIP → Publish customizations.
-4. Re-add the control (**CustomPCF** publisher / `cpf_CustomPCF.PCF.LookupFilteredSubgrid`) on a Single Line Text placeholder field and set the properties below.
+1. Download **[LookupFilteredSubgridSolution_1_5_0_0.zip](dist/LookupFilteredSubgridSolution_1_5_0_0.zip)**.
+2. Remove the previous control from the form → Save & Publish.
+3. Import → Publish.
+4. Re-add **CustomPCF** / `cpf_CustomPCF.PCF.LookupFilteredSubgrid` and set properties.
 
-## Control properties (v1.4.1)
+## Properties (v1.5.0)
 
-| Property | Example | Meaning |
-|----------|---------|---------|
-| Bound `value` | Placeholder text column on Contact | Host field for the PCF |
-| `targetEntityLogicalName` | `mcshhs_akaname` | Subgrid table logical name |
-| `targetEntitySetName` | `mcshhs_akanames` | OData / Web API entity set for `/_api` |
-| `lookupFieldLogicalName` | `fc_applican` | Lookup on the Contact form |
-| `filterAttributeLogicalName` | `fc_contact` | Lookup on the subgrid table |
+| Property | Example |
+|----------|---------|
+| `targetEntityLogicalName` | `mcshhs_akaname` |
+| `targetEntitySetName` | `mcshhs_akanames` |
+| `lookupFieldLogicalName` | `fc_applican` |
+| `filterAttributeLogicalName` | `fc_contact` |
+| `portalId` | website GUID or empty GUID |
+| `recordId` | `00000000-0000-0000-0000-000000000000` (Insert) |
+| `entityFormId` | Insert Basic Form GUID |
 
-List loads use **OData only** via `webapi.safeAjax` (no FetchXML), for example:
+Create iframe URL:
 
-`GET /_api/mcshhs_akanames?$select=mcshhs_akaname,mcshhs_firstname,createdon,_fc_contact_value&$filter=_fc_contact_value eq GUID and statecode eq 0&$orderby=createdon desc&$top=10`
-
-Formatted lookup names come from the Prefer annotation header (`_fc_contact_value@OData.Community.Display.V1.FormattedValue`).
+`/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}`
 
 ## Build
 
@@ -43,9 +43,4 @@ cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
 
-Import `dist/LookupFilteredSubgridSolution_1_4_1_0.zip`, then publish customizations.
-
-## Notes
-
-- The page must include Microsoft’s `webapi.safeAjax` wrapper script.
-- After publisher or property changes, remove the old control from the form before re-adding.
+Import `dist/LookupFilteredSubgridSolution_1_5_0_0.zip`.

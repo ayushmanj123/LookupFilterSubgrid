@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import {
+  buildModalFormUrl,
   createDemoRecords,
+  EMPTY_GUID,
   getMissingConfigFields,
   normalizeGuid,
+  resolvePortalRecordId,
   ControlConfig,
 } from "../LookupFilteredSubgrid/types";
 import {
@@ -24,6 +27,9 @@ function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
     targetEntityLogicalName: "mcshhs_akaname",
     targetEntitySetName: "mcshhs_akanames",
     filterAttributeLogicalName: "fc_contact",
+    portalId: EMPTY_GUID,
+    recordId: EMPTY_GUID,
+    entityFormId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
     filterLookupEntitySetName: "contacts",
     displayColumns: [
       "mcshhs_akaname",
@@ -46,6 +52,15 @@ assert.ok(
   getMissingConfigFields(baseConfig({ lookupFieldLogicalName: "" })).includes(
     "lookupFieldLogicalName"
   )
+);
+assert.ok(getMissingConfigFields(baseConfig({ entityFormId: "" })).includes("entityFormId"));
+
+assert.equal(resolvePortalRecordId(""), EMPTY_GUID);
+assert.equal(resolvePortalRecordId("{11111111-1111-1111-1111-111111111111}"), "11111111-1111-1111-1111-111111111111");
+
+assert.equal(
+  buildModalFormUrl(EMPTY_GUID, EMPTY_GUID, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+  `/_portal/modal-form-template-path/${EMPTY_GUID}?id=${EMPTY_GUID}&entityformid=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`
 );
 
 assert.equal(
@@ -82,7 +97,11 @@ const query = buildODataQueryString({
 });
 assert.ok(query.startsWith("?"));
 assert.ok(query.includes("$select="));
-assert.ok(query.includes(encodeURIComponent("mcshhs_akaname,mcshhs_firstname,createdon,_fc_contact_value")));
+assert.ok(
+  query.includes(
+    encodeURIComponent("mcshhs_akaname,mcshhs_firstname,createdon,_fc_contact_value")
+  )
+);
 assert.ok(!query.includes("FormattedValue"));
 assert.ok(query.includes("$filter="));
 assert.ok(query.includes("$orderby="));

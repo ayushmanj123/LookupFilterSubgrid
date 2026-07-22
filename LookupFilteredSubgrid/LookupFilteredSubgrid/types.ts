@@ -1,9 +1,17 @@
+export const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
 export interface ControlConfig {
   lookupFieldLogicalName: string;
   targetEntityLogicalName: string;
   /** OData/Web API plural set name for /_api (e.g. akatables). */
   targetEntitySetName: string;
   filterAttributeLogicalName: string;
+  /** Website/portal GUID for modal-form-template-path. */
+  portalId: string;
+  /** Form record GUID; empty GUID for Insert. */
+  recordId: string;
+  /** Insert Basic Form (entity form) GUID. */
+  entityFormId: string;
   /** Runtime default for create bind (e.g. contacts). */
   filterLookupEntitySetName: string;
   /** Resolved at runtime: primary name + createdon. */
@@ -27,7 +35,25 @@ export function getMissingConfigFields(config: ControlConfig): string[] {
   if (!config.targetEntityLogicalName) missing.push("targetEntityLogicalName");
   if (!config.targetEntitySetName) missing.push("targetEntitySetName");
   if (!config.filterAttributeLogicalName) missing.push("filterAttributeLogicalName");
+  if (!config.portalId) missing.push("portalId");
+  if (!config.entityFormId) missing.push("entityFormId");
   return missing;
+}
+
+export function resolvePortalRecordId(recordId: string | null | undefined): string {
+  const cleaned = (recordId || "").replace(/[{}]/g, "").trim();
+  return cleaned || EMPTY_GUID;
+}
+
+export function buildModalFormUrl(
+  portalId: string,
+  recordId: string,
+  entityFormId: string
+): string {
+  const portal = (portalId || "").replace(/[{}]/g, "").trim() || EMPTY_GUID;
+  const record = resolvePortalRecordId(recordId);
+  const formId = (entityFormId || "").replace(/[{}]/g, "").trim();
+  return `/_portal/modal-form-template-path/${portal}?id=${record}&entityformid=${formId}`;
 }
 
 export function createDemoRecords(config: ControlConfig): EntityRecord[] {
