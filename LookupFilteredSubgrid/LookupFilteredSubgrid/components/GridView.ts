@@ -215,6 +215,12 @@ export class GridView {
   }
 
   private formatHeader(logicalName: string): string {
+    if (logicalName.includes("@OData.Community.Display.V1.FormattedValue")) {
+      const base = logicalName.split("@")[0] || logicalName;
+      const parts = base.replace(/^_/, "").replace(/_value$/, "").split("_");
+      const last = parts[parts.length - 1] || base;
+      return last.charAt(0).toUpperCase() + last.slice(1);
+    }
     const parts = logicalName.split("_");
     const last = parts[parts.length - 1] || logicalName;
     return last.charAt(0).toUpperCase() + last.slice(1);

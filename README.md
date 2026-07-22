@@ -11,12 +11,12 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 ## Download and import into CRM / Dataverse
 
-1. Download **[LookupFilteredSubgridSolution_1_4_0_0.zip](dist/LookupFilteredSubgridSolution_1_4_0_0.zip)** from this repo.
+1. Download **[LookupFilteredSubgridSolution_1_4_1_0.zip](dist/LookupFilteredSubgridSolution_1_4_1_0.zip)** from this repo.
 2. **Remove** any previous version of this control from the Contact form → Save & Publish.
 3. Import the ZIP → Publish customizations.
 4. Re-add the control (**CustomPCF** publisher / `cpf_CustomPCF.PCF.LookupFilteredSubgrid`) on a Single Line Text placeholder field and set the properties below.
 
-## Control properties (v1.4.0)
+## Control properties (v1.4.1)
 
 | Property | Example | Meaning |
 |----------|---------|---------|
@@ -28,7 +28,9 @@ Power Pages–oriented PCF control that shows related Dataverse records filtered
 
 List loads use **OData only** via `webapi.safeAjax` (no FetchXML), for example:
 
-`GET /_api/mcshhs_akanames?$select=name,createdon&$filter=_fc_contact_value eq GUID and statecode eq 0&$orderby=createdon desc&$top=10`
+`GET /_api/mcshhs_akanames?$select=mcshhs_akaname,mcshhs_firstname,createdon,_fc_contact_value&$filter=_fc_contact_value eq GUID and statecode eq 0&$orderby=createdon desc&$top=10`
+
+Formatted lookup names come from the Prefer annotation header (`_fc_contact_value@OData.Community.Display.V1.FormattedValue`).
 
 ## Build
 
@@ -41,7 +43,7 @@ cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
 
-Import `dist/LookupFilteredSubgridSolution_1_4_0_0.zip`, then publish customizations.
+Import `dist/LookupFilteredSubgridSolution_1_4_1_0.zip`, then publish customizations.
 
 ## Notes
 

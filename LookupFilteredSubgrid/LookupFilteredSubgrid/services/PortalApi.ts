@@ -3,11 +3,12 @@ export interface PortalAjaxResponse {
   getResponseHeader: (name: string) => string | null;
 }
 
-interface SafeAjaxOptions {
+export interface SafeAjaxOptions {
   type: string;
   url: string;
   contentType?: string;
   data?: string;
+  headers?: Record<string, string>;
   success?: (data: unknown, textStatus: string, xhr: PortalXhrLike) => void;
   error?: (xhr: PortalXhrLike, textStatus: string, errorThrown: string) => void;
 }
@@ -31,7 +32,9 @@ declare global {
  */
 export class PortalApi {
   public get(url: string): Promise<PortalAjaxResponse> {
-    return this.request("GET", url);
+    return this.request("GET", url, undefined, {
+      Prefer: 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+    });
   }
 
   public post(url: string, body: Record<string, unknown>): Promise<PortalAjaxResponse> {
@@ -59,11 +62,12 @@ export class PortalApi {
   private request(
     type: string,
     url: string,
-    body?: Record<string, unknown>
+    body?: Record<string, unknown>,
+    headers?: Record<string, string>
   ): Promise<PortalAjaxResponse> {
     return new Promise((resolve, reject) => {
       try {
-        this.getSafeAjax()({
+        const options: SafeAjaxOptions = {
           type,
           url,
           contentType: "application/json",
@@ -82,7 +86,11 @@ export class PortalApi {
               `HTTP ${xhr?.status || "error"}`;
             reject(new Error(detail));
           },
-        });
+        };
+        if (headers && Object.keys(headers).length) {
+          options.headers = headers;
+        }
+        this.getSafeAjax()(options);
       } catch (err) {
         reject(err instanceof Error ? err : new Error(String(err)));
       }

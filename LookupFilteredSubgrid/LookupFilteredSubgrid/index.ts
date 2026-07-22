@@ -138,8 +138,13 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: this.config?.displayColumns?.length
         ? this.config.displayColumns
-        : ["name", "createdon"],
-      primaryNameAttribute: this.config?.primaryNameAttribute || "name",
+        : [
+            "mcshhs_akaname",
+            "mcshhs_firstname",
+            "createdon",
+            "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
+          ],
+      primaryNameAttribute: this.config?.primaryNameAttribute || "mcshhs_akaname",
       pageSize: 10,
       enableCreate: true,
       enableEdit: true,
@@ -186,11 +191,14 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
 
-    // Portal sites often block EntityDefinitions; use safe defaults for Contact forms.
-    this.config.primaryNameAttribute = this.config.primaryNameAttribute || "name";
-    this.config.displayColumns = [this.config.primaryNameAttribute, "createdon"].filter(
-      (c, i, arr) => arr.indexOf(c) === i
-    );
+    // Portal-safe defaults for mcshhs_akaname grid columns.
+    this.config.primaryNameAttribute = "mcshhs_akaname";
+    this.config.displayColumns = [
+      "mcshhs_akaname",
+      "mcshhs_firstname",
+      "createdon",
+      "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
+    ];
     this.config.filterLookupEntitySetName =
       this.config.filterLookupEntitySetName || "contacts";
     this.metadataReady = true;
@@ -296,11 +304,16 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
 
   private applyDemoDefaults(config: ControlConfig): void {
     if (!config.lookupFieldLogicalName) config.lookupFieldLogicalName = "fc_applican";
-    if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "akatable";
-    if (!config.targetEntitySetName) config.targetEntitySetName = "akatables";
+    if (!config.targetEntityLogicalName) config.targetEntityLogicalName = "mcshhs_akaname";
+    if (!config.targetEntitySetName) config.targetEntitySetName = "mcshhs_akanames";
     if (!config.filterAttributeLogicalName) config.filterAttributeLogicalName = "fc_contact";
-    config.primaryNameAttribute = "name";
-    config.displayColumns = ["name", "createdon"];
+    config.primaryNameAttribute = "mcshhs_akaname";
+    config.displayColumns = [
+      "mcshhs_akaname",
+      "mcshhs_firstname",
+      "createdon",
+      "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
+    ];
     config.filterLookupEntitySetName = "contacts";
   }
 
@@ -325,9 +338,10 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
     this.editingRecordId = null;
+    const editColumns = ["mcshhs_akaname", "mcshhs_firstname"];
     const editConfig = {
       ...this.config,
-      displayColumns: [this.config.primaryNameAttribute],
+      displayColumns: editColumns,
     };
     this.recordForm.open("create", editConfig, {});
   }
@@ -337,7 +351,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
 
-    const editColumns = [this.config.primaryNameAttribute];
+    const editColumns = ["mcshhs_akaname", "mcshhs_firstname"];
 
     if (this.config.useDemoData) {
       this.editingRecordId = record.id;
@@ -404,7 +418,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     try {
       const writeConfig = {
         ...this.config,
-        displayColumns: [this.config.primaryNameAttribute],
+        displayColumns: ["mcshhs_akaname", "mcshhs_firstname"],
       };
       const payload = this.dataService.buildWritePayload(
         writeConfig,

@@ -5,6 +5,7 @@ import {
   buildRecordUrl,
   eq,
   lookupEq,
+  toODataSelectFields,
 } from "./odata/ODataQuery";
 import { PortalApi } from "./PortalApi";
 
@@ -19,7 +20,7 @@ export class DataService {
     const pageSize = Math.max(1, config.pageSize);
     const page = Math.max(1, pageNumber);
     const skip = (page - 1) * pageSize;
-    const select = (config.displayColumns || []).filter(Boolean);
+    const select = toODataSelectFields(config.displayColumns || []);
 
     const url = buildApiUrl(config.targetEntitySetName, {
       select: select.length ? select : undefined,
@@ -50,7 +51,7 @@ export class DataService {
     columns: string[]
   ): Promise<EntityRecord> {
     const url = buildRecordUrl(entitySetName, recordId, {
-      select: columns.filter(Boolean),
+      select: toODataSelectFields(columns),
     });
     const response = await this.api.get(url);
     const record =
@@ -125,6 +126,9 @@ export class DataService {
 
     for (const column of config.displayColumns) {
       if (column === "createdon") {
+        continue;
+      }
+      if (column.includes("@") || column.startsWith("_")) {
         continue;
       }
       if (Object.prototype.hasOwnProperty.call(values, column)) {

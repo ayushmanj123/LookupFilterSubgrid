@@ -15,17 +15,23 @@ import {
   not,
   or,
   toFilterString,
+  toODataSelectFields,
 } from "../LookupFilteredSubgrid/services/odata/ODataQuery";
 
 function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
   return {
     lookupFieldLogicalName: "fc_applican",
-    targetEntityLogicalName: "akatable",
-    targetEntitySetName: "akatables",
+    targetEntityLogicalName: "mcshhs_akaname",
+    targetEntitySetName: "mcshhs_akanames",
     filterAttributeLogicalName: "fc_contact",
     filterLookupEntitySetName: "contacts",
-    displayColumns: ["name", "createdon"],
-    primaryNameAttribute: "name",
+    displayColumns: [
+      "mcshhs_akaname",
+      "mcshhs_firstname",
+      "createdon",
+      "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
+    ],
+    primaryNameAttribute: "mcshhs_akaname",
     pageSize: 10,
     enableCreate: true,
     enableEdit: true,
@@ -57,8 +63,18 @@ assert.equal(
 assert.ok(toFilterString(or(eq("statuscode", 1), eq("statuscode", 2))).includes(" or "));
 assert.equal(toFilterString(not(eq("statecode", 1))), "not (statecode eq 1)");
 
+assert.deepEqual(
+  toODataSelectFields([
+    "mcshhs_akaname",
+    "mcshhs_firstname",
+    "createdon",
+    "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
+  ]),
+  ["mcshhs_akaname", "mcshhs_firstname", "createdon", "_fc_contact_value"]
+);
+
 const query = buildODataQueryString({
-  select: ["name", "createdon"],
+  select: toODataSelectFields(baseConfig().displayColumns),
   filter,
   orderby: [{ field: "createdon", direction: "desc" }],
   top: 10,
@@ -66,6 +82,8 @@ const query = buildODataQueryString({
 });
 assert.ok(query.startsWith("?"));
 assert.ok(query.includes("$select="));
+assert.ok(query.includes(encodeURIComponent("mcshhs_akaname,mcshhs_firstname,createdon,_fc_contact_value")));
+assert.ok(!query.includes("FormattedValue"));
 assert.ok(query.includes("$filter="));
 assert.ok(query.includes("$orderby="));
 assert.ok(query.includes("$top=10"));
@@ -73,22 +91,19 @@ assert.ok(query.includes("$skip=10"));
 assert.ok(!query.toLowerCase().includes("fetchxml"));
 
 const listUrl = buildApiUrl("mcshhs_akanames", {
-  select: ["name"],
+  select: toODataSelectFields(baseConfig().displayColumns),
   filter: lookupEq("fc_contact", guid),
   top: 10,
 });
-assert.equal(
-  listUrl.startsWith("/_api/mcshhs_akanames?"),
-  true
-);
+assert.equal(listUrl.startsWith("/_api/mcshhs_akanames?"), true);
 assert.ok(listUrl.includes("$filter="));
 
 const recordUrl = buildRecordUrl("mcshhs_akanames", `{${guid}}`, {
-  select: ["name", "createdon"],
+  select: ["mcshhs_akaname", "mcshhs_firstname"],
 });
 assert.equal(
   recordUrl,
-  `/_api/mcshhs_akanames(${guid})?$select=${encodeURIComponent("name,createdon")}`
+  `/_api/mcshhs_akanames(${guid})?$select=${encodeURIComponent("mcshhs_akaname,mcshhs_firstname")}`
 );
 
 const demo = createDemoRecords(baseConfig({ useDemoData: true }));

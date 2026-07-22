@@ -23,6 +23,28 @@ export interface ODataQueryOptions {
   expand?: ExpandClause[];
 }
 
+export const FORMATTED_VALUE_ANNOTATION = "@OData.Community.Display.V1.FormattedValue";
+
+/**
+ * Maps display/config columns to valid $select fields.
+ * Annotation keys like `_fc_contact_value@OData...FormattedValue` become `_fc_contact_value`
+ * (FormattedValue is requested via Prefer header, not $select).
+ */
+export function toODataSelectFields(columns: string[]): string[] {
+  const out: string[] = [];
+  for (const raw of columns || []) {
+    const col = (raw || "").trim();
+    if (!col) {
+      continue;
+    }
+    const base = col.includes("@") ? col.split("@")[0] : col;
+    if (base && !out.includes(base)) {
+      out.push(base);
+    }
+  }
+  return out;
+}
+
 function formatLiteral(value: string | number | boolean): string {
   if (typeof value === "string") {
     return `'${value.replace(/'/g, "''")}'`;
