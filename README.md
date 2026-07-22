@@ -11,12 +11,12 @@ Power Pages–oriented PCF: related records filtered by a form lookup, OData lis
 
 ## Download
 
-1. Download **[LookupFilteredSubgridSolution_1_5_0_0.zip](dist/LookupFilteredSubgridSolution_1_5_0_0.zip)**.
+1. Download **[LookupFilteredSubgridSolution_1_5_1_0.zip](dist/LookupFilteredSubgridSolution_1_5_1_0.zip)**.
 2. Remove the previous control from the form → Save & Publish.
 3. Import → Publish.
 4. Re-add **CustomPCF** / `cpf_CustomPCF.PCF.LookupFilteredSubgrid` and set properties.
 
-## Properties (v1.5.0)
+## Properties (v1.5.1)
 
 | Property | Example |
 |----------|---------|
@@ -30,7 +30,9 @@ Power Pages–oriented PCF: related records filtered by a form lookup, OData lis
 
 Create iframe URL:
 
-`/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}`
+`/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}&fc_contact={lookupGuid}`
+
+On the Insert Basic Form, set **Associated Table Reference** → Source Type **Query String**, Query String Name = `fc_contact` (same as `filterAttributeLogicalName`), Target Lookup = `fc_contact`, Populate Lookup Field = Yes.
 
 ## Build
 
@@ -43,4 +45,4 @@ cd ..
 powershell -ExecutionPolicy Bypass -File .\scripts\Build-SolutionZip.ps1
 ```
 
-Import `dist/LookupFilteredSubgridSolution_1_5_0_0.zip`.
+Import `dist/LookupFilteredSubgridSolution_1_5_1_0.zip`.

@@ -74,13 +74,21 @@ export class PortalFormModal {
     portalId: string;
     recordId: string;
     entityFormId: string;
+    /** Query string for Basic Form Associated Table Reference (e.g. fc_contact=guid). */
+    associateLookupParamName?: string;
+    associateLookupRecordId?: string;
     title?: string;
   }): void {
     this.titleEl.textContent = options.title || "Create";
+    const associateParam = (options.associateLookupParamName || "").trim();
+    const associateId = (options.associateLookupRecordId || "").replace(/[{}]/g, "").trim();
     const url = buildModalFormUrl(
       options.portalId,
       options.recordId,
-      options.entityFormId
+      options.entityFormId,
+      associateParam && associateId
+        ? { paramName: associateParam, recordId: associateId }
+        : null
     );
 
     this.loadingEl.style.display = "block";

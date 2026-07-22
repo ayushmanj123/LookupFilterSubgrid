@@ -20,10 +20,28 @@ Field-bound Power Apps Component Framework control that displays related Dataver
 Create uses:
 
 ```text
-/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}
+/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}&{filterAttributeLogicalName}={lookupGuid}
 ```
 
-Find IDs in Portal Management: **Websites** (portalId), **Basic Forms** (entityFormId). Prefill `fc_contact` on the Basic Form (default / OnLoad), not via extra PCF query params.
+Example with your properties:
+
+```text
+...&entityformid=...&fc_contact=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+```
+
+On the Insert Basic Form, configure **Associated Table Reference**:
+
+| Setting | Value |
+|---------|--------|
+| Set Table Reference On Save | Yes |
+| Target Lookup Attribute Logical Name | `fc_contact` |
+| Table Logical Name | `contact` |
+| Source Type | Query String |
+| Query String Name | `fc_contact` (must match `filterAttributeLogicalName`) |
+| Query String Is Primary Key | Yes |
+| Populate Lookup Field | Yes |
+
+Find IDs in Portal Management: **Websites** (portalId), **Basic Forms** (entityFormId).
 
 ## Power Pages setup
 

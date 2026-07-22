@@ -64,6 +64,14 @@ assert.equal(
 );
 
 assert.equal(
+  buildModalFormUrl(EMPTY_GUID, EMPTY_GUID, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", {
+    paramName: "fc_contact",
+    recordId: "11111111-1111-1111-1111-111111111111",
+  }),
+  `/_portal/modal-form-template-path/${EMPTY_GUID}?id=${EMPTY_GUID}&entityformid=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee&fc_contact=11111111-1111-1111-1111-111111111111`
+);
+
+assert.equal(
   normalizeGuid("{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}"),
   "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 );

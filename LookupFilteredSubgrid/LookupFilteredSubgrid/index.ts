@@ -366,6 +366,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       portalId: this.config.portalId || EMPTY_GUID,
       recordId: resolvePortalRecordId(this.config.recordId),
       entityFormId: this.config.entityFormId,
+      associateLookupParamName: this.config.filterAttributeLogicalName,
+      associateLookupRecordId: this.filterGuid,
       title: "Create",
     });
   }

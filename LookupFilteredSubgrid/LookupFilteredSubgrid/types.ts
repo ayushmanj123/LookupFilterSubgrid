@@ -48,12 +48,21 @@ export function resolvePortalRecordId(recordId: string | null | undefined): stri
 export function buildModalFormUrl(
   portalId: string,
   recordId: string,
-  entityFormId: string
+  entityFormId: string,
+  associateLookup?: { paramName: string; recordId: string } | null
 ): string {
   const portal = (portalId || "").replace(/[{}]/g, "").trim() || EMPTY_GUID;
   const record = resolvePortalRecordId(recordId);
   const formId = (entityFormId || "").replace(/[{}]/g, "").trim();
-  return `/_portal/modal-form-template-path/${portal}?id=${record}&entityformid=${formId}`;
+  let url = `/_portal/modal-form-template-path/${portal}?id=${record}&entityformid=${formId}`;
+
+  const paramName = (associateLookup?.paramName || "").trim();
+  const associateId = (associateLookup?.recordId || "").replace(/[{}]/g, "").trim();
+  if (paramName && associateId) {
+    url += `&${encodeURIComponent(paramName)}=${encodeURIComponent(associateId)}`;
+  }
+
+  return url;
 }
 
 export function createDemoRecords(config: ControlConfig): EntityRecord[] {
