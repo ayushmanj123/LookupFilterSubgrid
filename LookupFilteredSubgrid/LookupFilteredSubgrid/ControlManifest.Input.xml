@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="CustomPCF.PCF" constructor="LookupFilteredSubgrid" version="1.3.1" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
+  <control namespace="CustomPCF.PCF" constructor="LookupFilteredSubgrid" version="1.3.2" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
     <external-service-usage enabled="false" />
     <property name="value" display-name-key="Value_Display_Key" description-key="Value_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" />
     <property name="targetEntityLogicalName" display-name-key="TargetEntity_Display_Key" description-key="TargetEntity_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />

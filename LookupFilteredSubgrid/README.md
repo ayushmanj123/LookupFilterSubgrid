@@ -80,7 +80,7 @@ Filtering uses FetchXML via Power Pages `/_api` (`webapi.safeAjax`). Display nam
 ## Runtime behavior
 
 - Reads the sibling lookup GUID via Power Pages Client API (`$pages`) when available, otherwise portal DOM.
-- Loads rows with `webapi.safeAjax` → `GET /_api/{targetEntitySetName}?fetchXml=...` filtered by the lookup GUID.
+- Loads rows with `webapi.safeAjax` → `GET /_api/{targetEntitySetName}?$filter=_lookup_value eq {guid}` (OData; not FetchXML).
 - Create/update/delete use `POST` / `PATCH` / `DELETE` on `/_api/{targetEntitySetName}`; create binds the filter lookup (e.g. `/contacts({guid})`).
 - Changing the lookup reloads page 1 of the grid.
 

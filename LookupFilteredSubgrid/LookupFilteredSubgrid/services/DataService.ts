@@ -1,5 +1,5 @@
 import {
-  buildFilterFetchXml,
+  buildPortalListQuery,
   ControlConfig,
   EntityRecord,
   LoadResult,
@@ -14,17 +14,15 @@ export class DataService {
     filterGuid: string,
     pageNumber: number
   ): Promise<LoadResult> {
-    const fetchXml = buildFilterFetchXml(
-      config.targetEntityLogicalName,
+    const entitySet = this.normalizeEntitySet(config.targetEntitySetName);
+    const query = buildPortalListQuery(
       config.filterAttributeLogicalName,
       filterGuid,
-      config.primaryNameAttribute,
       config.pageSize,
       pageNumber
     );
-
-    const entitySet = this.normalizeEntitySet(config.targetEntitySetName);
-    const url = `/_api/${entitySet}?fetchXml=${encodeURIComponent(fetchXml)}`;
+    // Same pattern as portal console: GET /_api/{entitySet} — with OData $filter (not FetchXML).
+    const url = `/_api/${entitySet}${query}`;
     const response = await this.api.get(url);
     const entities = this.extractEntities(response.data).map((e) =>
       this.normalizeEntity(e, config)

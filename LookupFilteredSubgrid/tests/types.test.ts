@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {
-  buildFilterFetchXml,
+  buildPortalListQuery,
   createDemoRecords,
   escapeXml,
   getMissingConfigFields,
@@ -41,18 +41,21 @@ assert.equal(normalizeGuid("bad"), null);
 
 assert.equal(escapeXml(`a&b<c>`), "a&amp;b&lt;c&gt;");
 
-const fetchXml = buildFilterFetchXml(
-  "akatable",
+const listQuery = buildPortalListQuery(
   "fc_contact",
   "11111111-1111-1111-1111-111111111111",
-  "name",
   10,
-  1
+  2
 );
-assert.ok(fetchXml.includes('entity name="akatable"'));
-assert.ok(fetchXml.includes('attribute name="fc_contact"') === false);
-assert.ok(fetchXml.includes('condition attribute="fc_contact"'));
-assert.ok(fetchXml.includes("11111111-1111-1111-1111-111111111111"));
+assert.ok(listQuery.startsWith("?"));
+assert.ok(listQuery.includes("$filter="));
+assert.ok(
+  listQuery.includes(
+    encodeURIComponent("_fc_contact_value eq 11111111-1111-1111-1111-111111111111")
+  )
+);
+assert.ok(listQuery.includes("$top=10"));
+assert.ok(listQuery.includes("$skip=10"));
 
 const demo = createDemoRecords(baseConfig({ useDemoData: true }));
 assert.equal(demo.length, 3);

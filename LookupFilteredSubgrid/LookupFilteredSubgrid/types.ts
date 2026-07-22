@@ -87,6 +87,33 @@ export function escapeXml(value: string): string {
     .replace(/'/g, "&apos;");
 }
 
+/**
+ * Power Pages /_api list query. Uses OData $filter (not FetchXML — FetchXML often returns 500 on portals).
+ * Lookup GUID filter uses _attributename_value.
+ */
+export function buildPortalListQuery(
+  filterAttributeLogicalName: string,
+  filterGuid: string,
+  pageSize: number,
+  pageNumber: number
+): string {
+  const top = Math.max(1, pageSize);
+  const page = Math.max(1, pageNumber);
+  const skip = (page - 1) * top;
+  const guid = filterGuid.replace(/[{}]/g, "");
+  const lookupValueField = `_${filterAttributeLogicalName}_value`;
+  const filter = `${lookupValueField} eq ${guid}`;
+
+  const params = [
+    `$filter=${encodeURIComponent(filter)}`,
+    `$top=${top}`,
+    `$skip=${skip}`,
+  ];
+
+  return `?${params.join("&")}`;
+}
+
+/** @deprecated Prefer buildPortalListQuery for Power Pages. Kept for reference/tests of FetchXML shape. */
 export function buildFilterFetchXml(
   entityLogicalName: string,
   filterAttributeLogicalName: string,
