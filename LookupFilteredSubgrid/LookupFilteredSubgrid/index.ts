@@ -11,6 +11,7 @@ import {
   EMPTY_GUID,
   EntityRecord,
   getMissingConfigFields,
+  parseDisplayColumns,
   resolvePortalRecordId,
 } from "./types";
 
@@ -129,26 +130,24 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private applyConfig(context: ComponentFramework.Context<IInputs>): void {
     const p = context.parameters;
     const useDemo = this.isLocalHarness();
+    const filterAttributeLogicalName = (p.filterAttributeLogicalName.raw || "").trim();
+    const parsedColumns = parseDisplayColumns(
+      p.displayColumns.raw,
+      filterAttributeLogicalName
+    );
     this.config = {
       lookupFieldLogicalName: (p.lookupFieldLogicalName.raw || "").trim(),
       targetEntityLogicalName: (p.targetEntityLogicalName.raw || "").trim(),
       targetEntitySetName: (p.targetEntitySetName.raw || "").trim(),
-      filterAttributeLogicalName: (p.filterAttributeLogicalName.raw || "").trim(),
+      filterAttributeLogicalName,
       portalId: (p.portalId.raw || "").trim() || EMPTY_GUID,
       recordId: resolvePortalRecordId(p.recordId.raw),
       entityFormId: (p.entityFormId.raw || "").trim(),
       editEntityFormId: (p.editEntityFormId.raw || "").trim(),
       createButtonLabel: (p.createButtonLabel.raw || "").trim() || "Create",
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
-      displayColumns: this.config?.displayColumns?.length
-        ? this.config.displayColumns
-        : [
-            "mcshhs_akaname",
-            "mcshhs_firstname",
-            "createdon",
-            "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
-          ],
-      primaryNameAttribute: this.config?.primaryNameAttribute || "mcshhs_akaname",
+      displayColumns: parsedColumns.displayColumns,
+      primaryNameAttribute: parsedColumns.primaryNameAttribute,
       pageSize: 10,
       enableCreate: true,
       enableEdit: true,
@@ -191,18 +190,10 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       return;
     }
 
-    if (this.metadataReady && this.config.primaryNameAttribute) {
+    if (this.metadataReady) {
       return;
     }
 
-    // Portal-safe defaults for mcshhs_akaname grid columns.
-    this.config.primaryNameAttribute = "mcshhs_akaname";
-    this.config.displayColumns = [
-      "mcshhs_akaname",
-      "mcshhs_firstname",
-      "createdon",
-      "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
-    ];
     this.config.filterLookupEntitySetName =
       this.config.filterLookupEntitySetName || "contacts";
     this.metadataReady = true;
@@ -230,7 +221,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.emptyState.show(
         `PCF is loaded, but these properties are empty: ${stillMissing.join(
           ", "
-        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, filterAttributeLogicalName, portalId, entityFormId, and editEntityFormId on the form component.`
+        )}. Set targetEntityLogicalName, targetEntitySetName, lookupFieldLogicalName, filterAttributeLogicalName, displayColumns, portalId, entityFormId, and editEntityFormId on the form component.`
       );
       return;
     }
@@ -316,13 +307,14 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     if (!config.entityFormId) config.entityFormId = EMPTY_GUID;
     if (!config.editEntityFormId) config.editEntityFormId = EMPTY_GUID;
     if (!config.createButtonLabel) config.createButtonLabel = "Create";
-    config.primaryNameAttribute = "mcshhs_akaname";
-    config.displayColumns = [
-      "mcshhs_akaname",
-      "mcshhs_firstname",
-      "createdon",
-      "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
-    ];
+    if (!config.displayColumns?.length) {
+      const parsed = parseDisplayColumns(
+        "{fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}",
+        config.filterAttributeLogicalName
+      );
+      config.displayColumns = parsed.displayColumns;
+      config.primaryNameAttribute = parsed.primaryNameAttribute;
+    }
     config.filterLookupEntitySetName = "contacts";
   }
 

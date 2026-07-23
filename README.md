@@ -10,10 +10,10 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 
 ## Download
 
-1. **[LookupFilteredSubgridSolution_1_6_0_0.zip](dist/LookupFilteredSubgridSolution_1_6_0_0.zip)**
+1. **[LookupFilteredSubgridSolution_1_7_0_0.zip](dist/LookupFilteredSubgridSolution_1_7_0_0.zip)**
 2. Remove old control → Save & Publish → Import → re-add **CustomPCF** control.
 
-## Properties (v1.6.0)
+## Properties (v1.7.0)
 
 | Property | Example |
 |----------|---------|
@@ -21,14 +21,12 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 | `targetEntitySetName` | `mcshhs_akanames` |
 | `lookupFieldLogicalName` | `fc_applican` |
 | `filterAttributeLogicalName` | `fc_contact` |
+| `displayColumns` | `{fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}` |
 | `portalId` | website GUID or empty GUID |
 | `recordId` | `00000000-0000-0000-0000-000000000000` (Insert) |
 | `entityFormId` | Insert Basic Form GUID |
 | `editEntityFormId` | Edit Basic Form GUID |
 | `createButtonLabel` | e.g. `Add Other Name` |
-
-Create: `...&entityformid={entityFormId}&fc_contact={guid}`  
-Edit: `...&id={rowId}&entityformid={editEntityFormId}`
 
 ## Build
 

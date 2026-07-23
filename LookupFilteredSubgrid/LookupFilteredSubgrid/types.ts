@@ -18,7 +18,7 @@ export interface ControlConfig {
   createButtonLabel: string;
   /** Runtime default for create bind (e.g. contacts). */
   filterLookupEntitySetName: string;
-  /** Resolved at runtime: primary name + createdon. */
+  /** Grid columns from maker displayColumns text (parsed). */
   displayColumns: string[];
   primaryNameAttribute: string;
   pageSize: number;
@@ -33,12 +33,78 @@ export interface EntityMetadataInfo {
   entitySetName: string;
 }
 
+export const FORMATTED_VALUE_ANNOTATION =
+  "@OData.Community.Display.V1.FormattedValue";
+
+export interface ParsedDisplayColumns {
+  displayColumns: string[];
+  primaryNameAttribute: string;
+}
+
+/**
+ * Parse maker SingleLine.Text like `{fc_contact, name, firstname}` into
+ * grid display keys (lookups expanded to FormattedValue annotation keys).
+ */
+export function parseDisplayColumns(
+  raw: string | null | undefined,
+  filterAttributeLogicalName?: string
+): ParsedDisplayColumns {
+  let text = (raw || "").trim();
+  if (text.startsWith("{")) {
+    text = text.slice(1);
+  }
+  if (text.endsWith("}")) {
+    text = text.slice(0, -1);
+  }
+  text = text.trim();
+
+  const filterAttr = (filterAttributeLogicalName || "").trim().toLowerCase();
+  const tokens = text
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter((t) => t.length > 0);
+
+  const displayColumns: string[] = [];
+  for (const token of tokens) {
+    if (token.includes("@")) {
+      displayColumns.push(token);
+      continue;
+    }
+    if (/^_[a-z0-9_]+_value$/.test(token)) {
+      displayColumns.push(`${token}${FORMATTED_VALUE_ANNOTATION}`);
+      continue;
+    }
+    if (filterAttr && token === filterAttr) {
+      displayColumns.push(`_${token}_value${FORMATTED_VALUE_ANNOTATION}`);
+      continue;
+    }
+    displayColumns.push(token);
+  }
+
+  let primaryNameAttribute = "";
+  for (const col of displayColumns) {
+    const base = col.includes("@") ? col.split("@")[0] : col;
+    if (col.includes(FORMATTED_VALUE_ANNOTATION) || /^_[a-z0-9_]+_value$/.test(base)) {
+      continue;
+    }
+    primaryNameAttribute = base;
+    break;
+  }
+  if (!primaryNameAttribute && displayColumns.length) {
+    const first = displayColumns[0];
+    primaryNameAttribute = first.includes("@") ? first.split("@")[0] : first;
+  }
+
+  return { displayColumns, primaryNameAttribute };
+}
+
 export function getMissingConfigFields(config: ControlConfig): string[] {
   const missing: string[] = [];
   if (!config.lookupFieldLogicalName) missing.push("lookupFieldLogicalName");
   if (!config.targetEntityLogicalName) missing.push("targetEntityLogicalName");
   if (!config.targetEntitySetName) missing.push("targetEntitySetName");
   if (!config.filterAttributeLogicalName) missing.push("filterAttributeLogicalName");
+  if (!config.displayColumns?.length) missing.push("displayColumns");
   if (!config.portalId) missing.push("portalId");
   if (!config.entityFormId) missing.push("entityFormId");
   if (!config.editEntityFormId) missing.push("editEntityFormId");

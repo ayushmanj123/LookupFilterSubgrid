@@ -3,8 +3,10 @@ import {
   buildModalFormUrl,
   createDemoRecords,
   EMPTY_GUID,
+  FORMATTED_VALUE_ANNOTATION,
   getMissingConfigFields,
   normalizeGuid,
+  parseDisplayColumns,
   resolvePortalRecordId,
   ControlConfig,
 } from "../LookupFilteredSubgrid/types";
@@ -57,6 +59,33 @@ assert.ok(
 );
 assert.ok(getMissingConfigFields(baseConfig({ entityFormId: "" })).includes("entityFormId"));
 assert.ok(getMissingConfigFields(baseConfig({ editEntityFormId: "" })).includes("editEntityFormId"));
+assert.ok(getMissingConfigFields(baseConfig({ displayColumns: [] })).includes("displayColumns"));
+
+const parsedBraces = parseDisplayColumns(
+  "{fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}",
+  "fc_contact"
+);
+assert.deepEqual(parsedBraces.displayColumns, [
+  `_fc_contact_value${FORMATTED_VALUE_ANNOTATION}`,
+  "mcshhs_akaname",
+  "mcshhs_firstname",
+  "createdon",
+]);
+assert.equal(parsedBraces.primaryNameAttribute, "mcshhs_akaname");
+
+const parsedPlain = parseDisplayColumns("name, firstname,lastname", "fc_contact");
+assert.deepEqual(parsedPlain.displayColumns, ["name", "firstname", "lastname"]);
+assert.equal(parsedPlain.primaryNameAttribute, "name");
+
+const parsedLookupValue = parseDisplayColumns("_fc_contact_value, name", "fc_contact");
+assert.equal(
+  parsedLookupValue.displayColumns[0],
+  `_fc_contact_value${FORMATTED_VALUE_ANNOTATION}`
+);
+assert.equal(parsedLookupValue.primaryNameAttribute, "name");
+
+assert.deepEqual(parseDisplayColumns("  { , , }  ", "fc_contact").displayColumns, []);
+assert.deepEqual(parseDisplayColumns("", "fc_contact").displayColumns, []);
 
 assert.equal(resolvePortalRecordId(""), EMPTY_GUID);
 assert.equal(resolvePortalRecordId("{11111111-1111-1111-1111-111111111111}"), "11111111-1111-1111-1111-111111111111");
