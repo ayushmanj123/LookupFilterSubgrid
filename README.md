@@ -10,10 +10,10 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 
 ## Download
 
-1. **[LookupFilteredSubgridSolution_1_9_6_0.zip](dist/LookupFilteredSubgridSolution_1_9_6_0.zip)**
+1. **[LookupFilteredSubgridSolution_1_9_7_0.zip](dist/LookupFilteredSubgridSolution_1_9_7_0.zip)**
 2. Remove old control → Save & Publish → Import → re-add **CustomPCF** control.
 
-## Properties (v1.9.6)
+## Properties (v1.9.7)
 
 | Property | Example |
 |----------|---------|
@@ -32,6 +32,7 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 | `deleteActionLabel` | e.g. `Remove Other Names` |
 | `pageSize` | e.g. `10` (1–100) |
 
+v1.9.7: pager shows page numbers with Previous/Next only (no First/Last).
 v1.9.6: list paging uses `Prefer: odata.maxpagesize` + `@odata.nextLink` (not `$top`/`$skip`).
 
 ## Build

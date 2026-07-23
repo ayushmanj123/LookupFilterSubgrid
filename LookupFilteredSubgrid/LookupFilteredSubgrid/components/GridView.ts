@@ -5,7 +5,7 @@ export interface GridViewCallbacks {
   onDelete: (record: EntityRecord) => void;
   onCreate: () => void;
   onSort: (column: string) => void;
-  onFirstPage: () => void;
+  onGoToPage: (page: number) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
 }
@@ -256,27 +256,35 @@ export class GridView {
     const canPrev = pageNumber > 1;
 
     this.pagerList.appendChild(
-      this.createPagerItem("«", "First", !canPrev, () => this.callbacks.onFirstPage())
-    );
-    this.pagerList.appendChild(
       this.createPagerItem("‹", "Previous", !canPrev, () => this.callbacks.onPrevPage())
     );
 
-    const pageItem = document.createElement("li");
-    pageItem.className = "active";
-    const pageLink = document.createElement("a");
-    pageLink.href = "#";
-    pageLink.textContent = String(pageNumber);
-    pageLink.setAttribute("aria-current", "page");
-    pageLink.addEventListener("click", (e) => e.preventDefault());
-    pageItem.appendChild(pageLink);
-    this.pagerList.appendChild(pageItem);
+    const lastPage = hasNextPage ? pageNumber + 1 : pageNumber;
+    for (let p = 1; p <= lastPage; p++) {
+      const isCurrent = p === pageNumber;
+      if (isCurrent) {
+        const pageItem = document.createElement("li");
+        pageItem.className = "active";
+        const pageLink = document.createElement("a");
+        pageLink.href = "#";
+        pageLink.textContent = String(p);
+        pageLink.title = `Page ${p}`;
+        pageLink.setAttribute("aria-label", `Page ${p}`);
+        pageLink.setAttribute("aria-current", "page");
+        pageLink.addEventListener("click", (e) => e.preventDefault());
+        pageItem.appendChild(pageLink);
+        this.pagerList.appendChild(pageItem);
+      } else {
+        this.pagerList.appendChild(
+          this.createPagerItem(String(p), `Page ${p}`, false, () =>
+            this.callbacks.onGoToPage(p)
+          )
+        );
+      }
+    }
 
     this.pagerList.appendChild(
       this.createPagerItem("›", "Next", !hasNextPage, () => this.callbacks.onNextPage())
-    );
-    this.pagerList.appendChild(
-      this.createPagerItem("»", "Last", true, () => undefined)
     );
   }
 

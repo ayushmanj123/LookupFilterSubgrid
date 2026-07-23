@@ -54,6 +54,18 @@
 
 .lfs-host-inner .view-pagination .pagination > li > a {
   cursor: pointer;
+  min-width: 2em;
+  min-height: 2em;
+  line-height: 2em;
+  text-align: center;
+  border-radius: 50%;
+  padding: 0 6px;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+.lfs-host-inner .view-pagination .pagination > .active > a {
+  border-radius: 50%;
 }
 
 .lfs-host-inner .view-pagination .pagination > .disabled > a {

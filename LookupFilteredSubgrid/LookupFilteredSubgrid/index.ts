@@ -73,7 +73,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         onEdit: (record) => this.openEdit(record),
         onDelete: (record) => void this.handleDelete(record),
         onSort: (column) => void this.handleSort(column),
-        onFirstPage: () => void this.goToPage(1),
+        onGoToPage: (page) => void this.goToPage(page),
         onPrevPage: () => void this.goToPage(this.pageNumber - 1),
         onNextPage: () => void this.goToPage(this.pageNumber + 1),
       });

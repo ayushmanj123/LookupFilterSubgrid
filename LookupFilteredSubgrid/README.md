@@ -28,7 +28,7 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 {fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}
 ```
 
-Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). Column headers sort via `$orderby`. Pagination is left-aligned and uses `Prefer: odata.maxpagesize` + `@odata.nextLink` (not `$top`/`$skip`). Date/time cells render as `7/23/2026 11:11 PM`.
+Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). Column headers sort via `$orderby`. Pagination is left-aligned (Previous/Next + page numbers; no First/Last) and uses `Prefer: odata.maxpagesize` + `@odata.nextLink` (not `$top`/`$skip`). Date/time cells render as `7/23/2026 11:11 PM`.
 
 Optional labels (same order):
 
