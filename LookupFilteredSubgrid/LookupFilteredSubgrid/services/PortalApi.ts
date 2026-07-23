@@ -31,9 +31,19 @@ declare global {
  * Promise wrapper around Power Pages webapi.safeAjax (/_api).
  */
 export class PortalApi {
-  public get(url: string): Promise<PortalAjaxResponse> {
+  /**
+   * @param maxPageSize When set, sends Prefer odata.maxpagesize (Power Pages paging).
+   *   Do not use $top for page-by-page navigation — it suppresses @odata.nextLink.
+   */
+  public get(url: string, maxPageSize?: number): Promise<PortalAjaxResponse> {
+    const preferParts = [
+      'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+    ];
+    if (typeof maxPageSize === "number" && maxPageSize > 0) {
+      preferParts.push(`odata.maxpagesize=${Math.floor(maxPageSize)}`);
+    }
     return this.request("GET", url, undefined, {
-      Prefer: 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+      Prefer: preferParts.join(","),
     });
   }
 

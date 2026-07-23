@@ -26,16 +26,16 @@ export class DataService {
     const orderDir = options?.sort?.direction === "asc" ? "asc" : "desc";
 
     const pageUrl = (options?.pageUrl || "").trim();
+    // Page size via Prefer: odata.maxpagesize — NOT $top ( $top blocks @odata.nextLink ).
     const url = pageUrl
       ? toPortalApiPath(pageUrl)
       : buildApiUrl(config.targetEntitySetName, {
           select: select.length ? select : undefined,
           filter: lookupEq(config.filterAttributeLogicalName, filterGuid),
           orderby: [{ field: orderField, direction: orderDir }],
-          top: pageSize,
         });
 
-    const response = await this.api.get(url);
+    const response = await this.api.get(url, pageSize);
     const entities = this.extractEntities(response.data).map((e) =>
       this.normalizeEntity(e, config)
     );
