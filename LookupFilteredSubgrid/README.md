@@ -17,6 +17,8 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 | `entityFormId` | Yes | Insert Basic Form GUID |
 | `editEntityFormId` | Yes | Edit Basic Form GUID |
 | `createButtonLabel` | No | Create button text (default `Create`) |
+| `editActionLabel` | No | Row Edit menu text (default `Edit`) |
+| `deleteActionLabel` | No | Row Delete menu text (default `Remove Other Name`) |
 
 ## Display columns
 
@@ -24,15 +26,11 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 {fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}
 ```
 
-Multi-line lists are supported (newlines treated as commas). No 100-character Single Line limit.
+Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). Column headers sort via `$orderby`.
 
-| Token | Behavior |
-|-------|----------|
-| Equals `filterAttributeLogicalName` | Expanded to `_…_value` FormattedValue |
-| `_otherlookup_value` | Other lookups |
-| Plain attribute | Selected and shown as-is |
+## Actions menu
 
-List `$filter` is **lookup only** (no `statecode eq 0`). Click column headers to sort (`$orderby`). Pagination uses Power Pages List-style Bootstrap pager (First / Previous / page / Next / Last disabled).
+Power Pages List-style dropdown (dark circular-chevron button, blue text links). Menu is portaled to `document.body` so it overlays the grid without clipping/scroll. Labels come from `editActionLabel` / `deleteActionLabel`.
 
 ## Create / Edit iframe
 

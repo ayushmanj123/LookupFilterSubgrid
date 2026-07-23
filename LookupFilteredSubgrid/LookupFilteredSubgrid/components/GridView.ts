@@ -25,9 +25,11 @@ export class GridView {
   private pagerList: HTMLUListElement;
   private createBtn: HTMLButtonElement;
   private errorEl: HTMLDivElement;
-  private openMenu: HTMLElement | null = null;
+  private openMenuWrap: HTMLElement | null = null;
+  private openMenuEl: HTMLElement | null = null;
   private docClickHandler: ((e: MouseEvent) => void) | null = null;
   private keyHandler: ((e: KeyboardEvent) => void) | null = null;
+  private scrollResizeHandler: (() => void) | null = null;
 
   constructor(
     private readonly container: HTMLDivElement,
@@ -90,11 +92,14 @@ export class GridView {
     this.container.appendChild(this.root);
 
     this.docClickHandler = (e: MouseEvent) => {
-      if (!this.openMenu) {
+      if (!this.openMenuWrap || !this.openMenuEl) {
         return;
       }
       const target = e.target as Node | null;
-      if (target && this.openMenu.contains(target)) {
+      if (
+        target &&
+        (this.openMenuWrap.contains(target) || this.openMenuEl.contains(target))
+      ) {
         return;
       }
       this.closeOpenMenu();
@@ -104,8 +109,11 @@ export class GridView {
         this.closeOpenMenu();
       }
     };
+    this.scrollResizeHandler = () => this.closeOpenMenu();
     document.addEventListener("click", this.docClickHandler);
     document.addEventListener("keydown", this.keyHandler);
+    window.addEventListener("scroll", this.scrollResizeHandler, true);
+    window.addEventListener("resize", this.scrollResizeHandler);
   }
 
   public setLoading(isLoading: boolean, message = "Loading..."): void {
@@ -230,6 +238,10 @@ export class GridView {
     if (this.keyHandler) {
       document.removeEventListener("keydown", this.keyHandler);
     }
+    if (this.scrollResizeHandler) {
+      window.removeEventListener("scroll", this.scrollResizeHandler, true);
+      window.removeEventListener("resize", this.scrollResizeHandler);
+    }
     this.root.remove();
   }
 
@@ -298,12 +310,17 @@ export class GridView {
     toggle.setAttribute("aria-haspopup", "true");
     toggle.setAttribute("aria-expanded", "false");
     toggle.setAttribute("title", "Actions");
-    toggle.innerHTML = '<span class="lfs-actions-caret" aria-hidden="true"></span>';
+    toggle.innerHTML =
+      '<span class="lfs-actions-circle" aria-hidden="true"><span class="lfs-actions-chevron"></span></span>';
     wrap.appendChild(toggle);
 
     const menu = document.createElement("ul");
-    menu.className = "dropdown-menu dropdown-menu-right lfs-actions-menu";
+    menu.className = "dropdown-menu lfs-actions-menu";
     menu.setAttribute("role", "menu");
+    menu.hidden = true;
+
+    const editLabel = (config.editActionLabel || "").trim() || "Edit";
+    const deleteLabel = (config.deleteActionLabel || "").trim() || "Remove Other Name";
 
     if (config.enableEdit) {
       const editItem = document.createElement("li");
@@ -312,8 +329,7 @@ export class GridView {
       editLink.href = "#";
       editLink.setAttribute("role", "menuitem");
       editLink.className = "lfs-action-edit";
-      editLink.innerHTML =
-        '<span class="lfs-action-icon lfs-icon-edit" aria-hidden="true"></span> Edit';
+      editLink.textContent = editLabel;
       editLink.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -331,8 +347,7 @@ export class GridView {
       delLink.href = "#";
       delLink.setAttribute("role", "menuitem");
       delLink.className = "lfs-action-remove";
-      delLink.innerHTML =
-        '<span class="lfs-action-icon lfs-icon-remove" aria-hidden="true"></span> Remove Other Name';
+      delLink.textContent = deleteLabel;
       delLink.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -343,33 +358,85 @@ export class GridView {
       menu.appendChild(delItem);
     }
 
+    // Keep a placeholder so the wrap owns the menu when closed.
     wrap.appendChild(menu);
 
     toggle.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const isOpen = wrap.classList.contains("open");
+      const isOpen = this.openMenuWrap === wrap;
       this.closeOpenMenu();
       if (!isOpen) {
-        wrap.classList.add("open");
-        toggle.setAttribute("aria-expanded", "true");
-        this.openMenu = wrap;
+        this.openActionsMenu(wrap, toggle, menu);
       }
     });
 
     return wrap;
   }
 
+  private openActionsMenu(
+    wrap: HTMLElement,
+    toggle: HTMLButtonElement,
+    menu: HTMLElement
+  ): void {
+    wrap.classList.add("open");
+    toggle.setAttribute("aria-expanded", "true");
+    menu.hidden = false;
+    menu.classList.add("lfs-actions-menu-portal");
+    document.body.appendChild(menu);
+
+    const rect = toggle.getBoundingClientRect();
+    const menuWidth = Math.max(menu.offsetWidth || 180, 180);
+    let left = rect.left;
+    if (left + menuWidth > window.innerWidth - 8) {
+      left = Math.max(8, rect.right - menuWidth);
+    }
+    let top = rect.bottom + 4;
+    const menuHeight = menu.offsetHeight || 80;
+    if (top + menuHeight > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - menuHeight - 4);
+    }
+
+    menu.style.position = "fixed";
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
+    menu.style.right = "auto";
+    menu.style.zIndex = "10050";
+    menu.style.display = "block";
+
+    this.openMenuWrap = wrap;
+    this.openMenuEl = menu;
+  }
+
   private closeOpenMenu(): void {
-    if (!this.openMenu) {
+    if (!this.openMenuWrap && !this.openMenuEl) {
       return;
     }
-    this.openMenu.classList.remove("open");
-    const toggle = this.openMenu.querySelector(".lfs-actions-toggle");
-    if (toggle) {
-      toggle.setAttribute("aria-expanded", "false");
+
+    if (this.openMenuWrap) {
+      this.openMenuWrap.classList.remove("open");
+      const toggle = this.openMenuWrap.querySelector(".lfs-actions-toggle");
+      if (toggle) {
+        toggle.setAttribute("aria-expanded", "false");
+      }
     }
-    this.openMenu = null;
+
+    if (this.openMenuEl) {
+      this.openMenuEl.hidden = true;
+      this.openMenuEl.classList.remove("lfs-actions-menu-portal");
+      this.openMenuEl.style.position = "";
+      this.openMenuEl.style.left = "";
+      this.openMenuEl.style.top = "";
+      this.openMenuEl.style.right = "";
+      this.openMenuEl.style.zIndex = "";
+      this.openMenuEl.style.display = "";
+      if (this.openMenuWrap && this.openMenuEl.parentElement !== this.openMenuWrap) {
+        this.openMenuWrap.appendChild(this.openMenuEl);
+      }
+    }
+
+    this.openMenuWrap = null;
+    this.openMenuEl = null;
   }
 
   private formatHeader(logicalName: string): string {

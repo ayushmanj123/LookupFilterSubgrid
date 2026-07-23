@@ -16,6 +16,10 @@ export interface ControlConfig {
   editEntityFormId: string;
   /** Create button label (defaults to Create). */
   createButtonLabel: string;
+  /** Row Edit action label (defaults to Edit). */
+  editActionLabel: string;
+  /** Row Delete action label (defaults to Remove Other Name). */
+  deleteActionLabel: string;
   /** Runtime default for create bind (e.g. contacts). */
   filterLookupEntitySetName: string;
   /** Grid columns from maker displayColumns text (parsed). */

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="CustomPCF.PCF" constructor="LookupFilteredSubgrid" version="1.8.0" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
+  <control namespace="CustomPCF.PCF" constructor="LookupFilteredSubgrid" version="1.9.0" display-name-key="LookupFilteredSubgrid_Display_Key" description-key="LookupFilteredSubgrid_Desc_Key" control-type="standard">
     <external-service-usage enabled="false" />
     <property name="value" display-name-key="Value_Display_Key" description-key="Value_Desc_Key" of-type="SingleLine.Text" usage="bound" required="true" />
     <property name="targetEntityLogicalName" display-name-key="TargetEntity_Display_Key" description-key="TargetEntity_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
@@ -13,6 +13,8 @@
     <property name="entityFormId" display-name-key="EntityFormId_Display_Key" description-key="EntityFormId_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="editEntityFormId" display-name-key="EditEntityFormId_Display_Key" description-key="EditEntityFormId_Desc_Key" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="createButtonLabel" display-name-key="CreateButtonLabel_Display_Key" description-key="CreateButtonLabel_Desc_Key" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="editActionLabel" display-name-key="EditActionLabel_Display_Key" description-key="EditActionLabel_Desc_Key" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="deleteActionLabel" display-name-key="DeleteActionLabel_Display_Key" description-key="DeleteActionLabel_Desc_Key" of-type="SingleLine.Text" usage="input" required="false" />
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/LookupFilteredSubgrid.css" order="1" />

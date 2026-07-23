@@ -161,6 +161,6 @@ export class RecordForm {
   }
 }
 
-export function confirmDelete(recordLabel: string): boolean {
-  return window.confirm(`Remove Other Name "${recordLabel}"? This cannot be undone.`);
+export function confirmDelete(recordLabel: string, actionLabel = "Remove Other Name"): boolean {
+  return window.confirm(`${actionLabel} "${recordLabel}"? This cannot be undone.`);
 }

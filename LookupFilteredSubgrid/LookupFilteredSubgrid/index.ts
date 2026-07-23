@@ -149,6 +149,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       entityFormId: (p.entityFormId.raw || "").trim(),
       editEntityFormId: (p.editEntityFormId.raw || "").trim(),
       createButtonLabel: (p.createButtonLabel.raw || "").trim() || "Create",
+      editActionLabel: (p.editActionLabel.raw || "").trim() || "Edit",
+      deleteActionLabel: (p.deleteActionLabel.raw || "").trim() || "Remove Other Name",
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: parsedColumns.displayColumns,
       primaryNameAttribute: parsedColumns.primaryNameAttribute,
@@ -330,6 +332,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     if (!config.entityFormId) config.entityFormId = EMPTY_GUID;
     if (!config.editEntityFormId) config.editEntityFormId = EMPTY_GUID;
     if (!config.createButtonLabel) config.createButtonLabel = "Create";
+    if (!config.editActionLabel) config.editActionLabel = "Edit";
+    if (!config.deleteActionLabel) config.deleteActionLabel = "Remove Other Name";
     if (!config.displayColumns?.length) {
       const parsed = parseDisplayColumns(
         "{fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}",
@@ -440,7 +444,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       record.id ||
       "this record";
 
-    if (!confirmDelete(String(label))) {
+    if (!confirmDelete(String(label), this.config.deleteActionLabel)) {
       return;
     }
 

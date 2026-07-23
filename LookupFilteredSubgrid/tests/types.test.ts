@@ -35,6 +35,8 @@ function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
     entityFormId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
     editEntityFormId: "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
     createButtonLabel: "Create",
+    editActionLabel: "Edit",
+    deleteActionLabel: "Remove Other Name",
     filterLookupEntitySetName: "contacts",
     displayColumns: [
       "mcshhs_akaname",

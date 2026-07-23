@@ -109,7 +109,7 @@
   box-sizing: border-box;
 }
 
-/* Row actions dropdown (List-style) */
+/* Row actions dropdown (Power Pages List-style, body-portaled when open) */
 .lfs-row-actions {
   position: relative;
   display: inline-block;
@@ -117,57 +117,68 @@
 
 .lfs-actions-toggle {
   min-width: 36px;
-  padding: 4px 10px;
-  background: #4a4a4a;
-  border-color: #4a4a4a;
-  color: #f5d76e;
+  height: 28px;
+  padding: 2px 8px;
+  background: #2f2f2f;
+  border-color: #2f2f2f;
+  color: #fff;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lfs-actions-toggle:hover,
-.lfs-actions-toggle:focus {
-  background: #3a3a3a;
-  border-color: #3a3a3a;
-  color: #ffe27a;
+.lfs-actions-toggle:focus,
+.lfs-row-actions.open > .lfs-actions-toggle {
+  background: #1f1f1f;
+  border-color: #1f1f1f;
+  color: #fff;
 }
 
-.lfs-actions-caret {
+.lfs-actions-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.lfs-actions-chevron {
   display: inline-block;
   width: 0;
   height: 0;
-  vertical-align: middle;
-  border-top: 6px solid #f5d76e;
-  border-right: 5px solid transparent;
-  border-left: 5px solid transparent;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #2f2f2f;
+  margin-top: 1px;
 }
 
 .lfs-actions-menu {
   display: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  z-index: 1000;
   min-width: 180px;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 4px 0;
   list-style: none;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 4px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
+.lfs-actions-menu.lfs-actions-menu-portal,
 .lfs-row-actions.open > .lfs-actions-menu {
   display: block;
 }
 
 .lfs-actions-menu > li > a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  display: block;
+  padding: 8px 16px;
   clear: both;
   font-weight: 400;
-  color: #333;
+  color: #337ab7;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -175,26 +186,8 @@
 .lfs-actions-menu > li > a:hover,
 .lfs-actions-menu > li > a:focus {
   background: #fff3b0;
-  color: #111;
+  color: #23527c;
   text-decoration: none;
-}
-
-.lfs-action-icon {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 14px 14px;
-}
-
-.lfs-icon-edit {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23333' d='M11.5 1.5l3 3L5 14H2v-3L11.5 1.5zM2 15h12v1H2z'/%3E%3C/svg%3E");
-}
-
-.lfs-icon-remove {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23333' d='M6 2h4l1 1h3v1H2V3h3l1-1zm1 4v6h1V6H7zm3 0v6h1V6h-1zM3 5h10l-1 9H4L3 5z'/%3E%3C/svg%3E");
 }
 
 /* Fallback modal chrome when Bootstrap theme is thin inside the PCF host */
