@@ -215,6 +215,7 @@ export class GridView {
         if (config.enableEdit || config.enableDelete) {
           const td = document.createElement("td");
           td.className = "actions";
+          td.setAttribute("aria-label", "action menu");
           td.appendChild(this.buildActionsDropdown(config, record));
           tr.appendChild(td);
         }
@@ -302,33 +303,42 @@ export class GridView {
 
   private buildActionsDropdown(config: ControlConfig, record: EntityRecord): HTMLElement {
     const wrap = document.createElement("div");
-    wrap.className = "dropdown lfs-row-actions";
+    wrap.className = "dropdown action";
 
     const toggle = document.createElement("button");
     toggle.type = "button";
-    toggle.className = "btn btn-default lfs-actions-toggle dropdown-toggle";
-    toggle.setAttribute("aria-haspopup", "true");
+    toggle.className = "btn btn-default btn-xs";
+    toggle.setAttribute("data-toggle", "dropdown");
     toggle.setAttribute("aria-expanded", "false");
-    toggle.setAttribute("title", "Actions");
+    toggle.setAttribute("aria-label", "action menu");
+    toggle.setAttribute("title", "action menu");
     toggle.innerHTML =
-      '<span class="lfs-actions-circle" aria-hidden="true"><span class="lfs-actions-chevron"></span></span>';
+      '<span class="fa fa-chevron-circle-down fa-fw" aria-hidden="true"></span>';
     wrap.appendChild(toggle);
 
     const menu = document.createElement("ul");
-    menu.className = "dropdown-menu lfs-actions-menu";
+    menu.className = "dropdown-menu";
     menu.setAttribute("role", "menu");
     menu.hidden = true;
 
     const editLabel = (config.editActionLabel || "").trim() || "Edit";
     const deleteLabel = (config.deleteActionLabel || "").trim() || "Remove Other Name";
+    const actionCount =
+      (config.enableEdit ? 1 : 0) + (config.enableDelete ? 1 : 0);
+    let actionPos = 0;
 
     if (config.enableEdit) {
+      actionPos += 1;
       const editItem = document.createElement("li");
-      editItem.setAttribute("role", "presentation");
+      editItem.setAttribute("role", "none");
       const editLink = document.createElement("a");
       editLink.href = "#";
       editLink.setAttribute("role", "menuitem");
-      editLink.className = "lfs-action-edit";
+      editLink.setAttribute("tabindex", "-1");
+      editLink.className = "edit-link launch-modal";
+      editLink.title = "Edit";
+      editLink.setAttribute("aria-setsize", String(actionCount));
+      editLink.setAttribute("aria-posinset", String(actionPos));
       editLink.textContent = editLabel;
       editLink.addEventListener("click", (e) => {
         e.preventDefault();
@@ -341,12 +351,17 @@ export class GridView {
     }
 
     if (config.enableDelete) {
+      actionPos += 1;
       const delItem = document.createElement("li");
-      delItem.setAttribute("role", "presentation");
+      delItem.setAttribute("role", "none");
       const delLink = document.createElement("a");
       delLink.href = "#";
       delLink.setAttribute("role", "menuitem");
-      delLink.className = "lfs-action-remove";
+      delLink.setAttribute("tabindex", "-1");
+      delLink.className = "delete-link";
+      delLink.title = "Delete";
+      delLink.setAttribute("aria-setsize", String(actionCount));
+      delLink.setAttribute("aria-posinset", String(actionPos));
       delLink.textContent = deleteLabel;
       delLink.addEventListener("click", (e) => {
         e.preventDefault();
@@ -358,7 +373,6 @@ export class GridView {
       menu.appendChild(delItem);
     }
 
-    // Keep a placeholder so the wrap owns the menu when closed.
     wrap.appendChild(menu);
 
     toggle.addEventListener("click", (e) => {
@@ -380,9 +394,9 @@ export class GridView {
     menu: HTMLElement
   ): void {
     wrap.classList.add("open");
+    toggle.classList.add("aria-exp");
     toggle.setAttribute("aria-expanded", "true");
     menu.hidden = false;
-    menu.classList.add("lfs-actions-menu-portal");
     document.body.appendChild(menu);
 
     const rect = toggle.getBoundingClientRect();
@@ -398,8 +412,8 @@ export class GridView {
     }
 
     menu.style.position = "fixed";
-    menu.style.left = `${Math.round(left)}px`;
-    menu.style.top = `${Math.round(top)}px`;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
     menu.style.right = "auto";
     menu.style.zIndex = "10050";
     menu.style.display = "block";
@@ -415,15 +429,15 @@ export class GridView {
 
     if (this.openMenuWrap) {
       this.openMenuWrap.classList.remove("open");
-      const toggle = this.openMenuWrap.querySelector(".lfs-actions-toggle");
+      const toggle = this.openMenuWrap.querySelector("button.btn");
       if (toggle) {
+        toggle.classList.remove("aria-exp");
         toggle.setAttribute("aria-expanded", "false");
       }
     }
 
     if (this.openMenuEl) {
       this.openMenuEl.hidden = true;
-      this.openMenuEl.classList.remove("lfs-actions-menu-portal");
       this.openMenuEl.style.position = "";
       this.openMenuEl.style.left = "";
       this.openMenuEl.style.top = "";

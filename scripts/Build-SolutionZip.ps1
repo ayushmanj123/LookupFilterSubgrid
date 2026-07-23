@@ -12,7 +12,7 @@ $pcfOut = Join-Path $root "LookupFilteredSubgrid\out\controls\LookupFilteredSubg
 $distDir = Join-Path $root "dist"
 $importDir = Join-Path $root "dist\_import"
 $controlName = "cpf_CustomPCF.PCF.LookupFilteredSubgrid"
-$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_9_0_0.zip"
+$zipPath = Join-Path $distDir "LookupFilteredSubgridSolution_1_9_1_0.zip"
 
 if (-not (Test-Path (Join-Path $pcfOut "bundle.js"))) {
   throw "PCF build output not found at $pcfOut. Run 'npm run build' in LookupFilteredSubgrid first."
@@ -41,12 +41,12 @@ Copy-Item (Join-Path $pcfOut "strings\*") (Join-Path $importDir "Controls\$contr
   <SolutionManifest>
     <UniqueName>LookupFilteredSubgridSolution</UniqueName>
     <LocalizedNames>
-      <LocalizedName description="Lookup Filtered Subgrid 1.9.0" languagecode="1033" />
+      <LocalizedName description="Lookup Filtered Subgrid 1.9.1" languagecode="1033" />
     </LocalizedNames>
     <Descriptions>
-      <Description description="PCF subgrid filtered by a form lookup value, with CRUD support for Power Pages. 1.9.0" languagecode="1033" />
+      <Description description="PCF subgrid filtered by a form lookup value, with CRUD support for Power Pages. 1.9.1" languagecode="1033" />
     </Descriptions>
-    <Version>1.9.0.0</Version>
+    <Version>1.9.1.0</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>CustomPCF</UniqueName>

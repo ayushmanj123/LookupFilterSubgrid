@@ -30,7 +30,7 @@ Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). 
 
 ## Actions menu
 
-Power Pages List-style dropdown (dark circular-chevron button, blue text links). Menu is portaled to `document.body` so it overlays the grid without clipping/scroll. Labels come from `editActionLabel` / `deleteActionLabel`.
+Power Pages List-style dropdown using portal classes (`dropdown action`, `btn btn-default btn-xs`, `fa fa-chevron-circle-down`, `edit-link` / `delete-link`). Menu is portaled to `document.body` so it overlays the grid. Labels come from `editActionLabel` / `deleteActionLabel`.
 
 ## Create / Edit iframe
 

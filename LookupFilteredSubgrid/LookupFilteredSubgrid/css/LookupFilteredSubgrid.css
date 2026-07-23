@@ -109,85 +109,15 @@
   box-sizing: border-box;
 }
 
-/* Row actions dropdown (Power Pages List-style, body-portaled when open) */
-.lfs-row-actions {
+/* Row actions: use portal Bootstrap/Font Awesome classes (.dropdown.action, .btn-xs, .fa-chevron-circle-down).
+   Only ensure closed menus stay hidden until body-portaled open. */
+.lfs-host-inner .dropdown.action {
   position: relative;
   display: inline-block;
 }
 
-.lfs-actions-toggle {
-  min-width: 36px;
-  height: 28px;
-  padding: 2px 8px;
-  background: #2f2f2f;
-  border-color: #2f2f2f;
-  color: #fff;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lfs-actions-toggle:hover,
-.lfs-actions-toggle:focus,
-.lfs-row-actions.open > .lfs-actions-toggle {
-  background: #1f1f1f;
-  border-color: #1f1f1f;
-  color: #fff;
-}
-
-.lfs-actions-circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.lfs-actions-chevron {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid #2f2f2f;
-  margin-top: 1px;
-}
-
-.lfs-actions-menu {
-  display: none;
-  min-width: 180px;
-  margin: 0;
-  padding: 4px 0;
-  list-style: none;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 2px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-}
-
-.lfs-actions-menu.lfs-actions-menu-portal,
-.lfs-row-actions.open > .lfs-actions-menu {
-  display: block;
-}
-
-.lfs-actions-menu > li > a {
-  display: block;
-  padding: 8px 16px;
-  clear: both;
-  font-weight: 400;
-  color: #337ab7;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.lfs-actions-menu > li > a:hover,
-.lfs-actions-menu > li > a:focus {
-  background: #fff3b0;
-  color: #23527c;
-  text-decoration: none;
+.lfs-host-inner .dropdown.action > .dropdown-menu[hidden] {
+  display: none !important;
 }
 
 /* Fallback modal chrome when Bootstrap theme is thin inside the PCF host */
