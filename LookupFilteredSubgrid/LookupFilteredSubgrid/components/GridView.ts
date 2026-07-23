@@ -4,8 +4,15 @@ export interface GridViewCallbacks {
   onEdit: (record: EntityRecord) => void;
   onDelete: (record: EntityRecord) => void;
   onCreate: () => void;
+  onSort: (column: string) => void;
+  onFirstPage: () => void;
   onPrevPage: () => void;
   onNextPage: () => void;
+}
+
+export interface GridSortState {
+  column: string;
+  direction: "asc" | "desc";
 }
 
 /**
@@ -15,9 +22,7 @@ export class GridView {
   private root: HTMLDivElement;
   private tableBody: HTMLTableSectionElement;
   private statusEl: HTMLDivElement;
-  private pagerInfo: HTMLSpanElement;
-  private prevBtn: HTMLButtonElement;
-  private nextBtn: HTMLButtonElement;
+  private pagerList: HTMLUListElement;
   private createBtn: HTMLButtonElement;
   private errorEl: HTMLDivElement;
   private openMenu: HTMLElement | null = null;
@@ -76,26 +81,11 @@ export class GridView {
 
     const pager = document.createElement("div");
     pager.className = "view-pagination clearfix";
-
-    this.prevBtn = document.createElement("button");
-    this.prevBtn.type = "button";
-    this.prevBtn.className = "btn btn-default";
-    this.prevBtn.textContent = "Previous";
-    this.prevBtn.addEventListener("click", () => this.callbacks.onPrevPage());
-    pager.appendChild(this.prevBtn);
-
-    this.pagerInfo = document.createElement("span");
-    this.pagerInfo.className = "page-info text-muted";
-    pager.appendChild(this.pagerInfo);
-
-    this.nextBtn = document.createElement("button");
-    this.nextBtn.type = "button";
-    this.nextBtn.className = "btn btn-default";
-    this.nextBtn.textContent = "Next";
-    this.nextBtn.addEventListener("click", () => this.callbacks.onNextPage());
-    pager.appendChild(this.nextBtn);
-
+    this.pagerList = document.createElement("ul");
+    this.pagerList.className = "pagination";
+    pager.appendChild(this.pagerList);
     grid.appendChild(pager);
+
     this.root.appendChild(grid);
     this.container.appendChild(this.root);
 
@@ -138,6 +128,7 @@ export class GridView {
     records: EntityRecord[],
     pageNumber: number,
     hasNextPage: boolean,
+    sort: GridSortState,
     emptyMessage?: string
   ): void {
     this.closeOpenMenu();
@@ -152,7 +143,34 @@ export class GridView {
     for (const col of config.displayColumns) {
       const th = document.createElement("th");
       th.scope = "col";
-      th.textContent = this.formatHeader(col);
+      th.className = "lfs-sortable";
+      if (sort.column === col) {
+        th.classList.add(sort.direction === "asc" ? "sorted-asc" : "sorted-desc");
+      }
+      th.setAttribute("role", "columnheader");
+      th.setAttribute("tabindex", "0");
+      th.title = "Sort";
+
+      const label = document.createElement("span");
+      label.className = "lfs-sort-label";
+      label.textContent = this.formatHeader(col);
+      th.appendChild(label);
+
+      const caret = document.createElement("span");
+      caret.className = "lfs-sort-caret";
+      caret.setAttribute("aria-hidden", "true");
+      th.appendChild(caret);
+
+      const activate = (e: Event) => {
+        e.preventDefault();
+        this.callbacks.onSort(col);
+      };
+      th.addEventListener("click", activate);
+      th.addEventListener("keydown", (e: KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          activate(e);
+        }
+      });
       headerRow.appendChild(th);
     }
 
@@ -197,9 +215,7 @@ export class GridView {
       }
     }
 
-    this.pagerInfo.textContent = `Page ${pageNumber}`;
-    this.prevBtn.disabled = pageNumber <= 1;
-    this.nextBtn.disabled = !hasNextPage;
+    this.renderPagination(pageNumber, hasNextPage);
   }
 
   public setVisible(visible: boolean): void {
@@ -215,6 +231,61 @@ export class GridView {
       document.removeEventListener("keydown", this.keyHandler);
     }
     this.root.remove();
+  }
+
+  private renderPagination(pageNumber: number, hasNextPage: boolean): void {
+    this.pagerList.innerHTML = "";
+    const canPrev = pageNumber > 1;
+
+    this.pagerList.appendChild(
+      this.createPagerItem("«", "First", !canPrev, () => this.callbacks.onFirstPage())
+    );
+    this.pagerList.appendChild(
+      this.createPagerItem("‹", "Previous", !canPrev, () => this.callbacks.onPrevPage())
+    );
+
+    const pageItem = document.createElement("li");
+    pageItem.className = "active";
+    const pageLink = document.createElement("a");
+    pageLink.href = "#";
+    pageLink.textContent = String(pageNumber);
+    pageLink.setAttribute("aria-current", "page");
+    pageLink.addEventListener("click", (e) => e.preventDefault());
+    pageItem.appendChild(pageLink);
+    this.pagerList.appendChild(pageItem);
+
+    this.pagerList.appendChild(
+      this.createPagerItem("›", "Next", !hasNextPage, () => this.callbacks.onNextPage())
+    );
+    this.pagerList.appendChild(
+      this.createPagerItem("»", "Last", true, () => undefined)
+    );
+  }
+
+  private createPagerItem(
+    label: string,
+    title: string,
+    disabled: boolean,
+    onClick: () => void
+  ): HTMLLIElement {
+    const li = document.createElement("li");
+    if (disabled) {
+      li.className = "disabled";
+    }
+    const a = document.createElement("a");
+    a.href = "#";
+    a.textContent = label;
+    a.title = title;
+    a.setAttribute("aria-label", title);
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (disabled) {
+        return;
+      }
+      onClick();
+    });
+    li.appendChild(a);
+    return li;
   }
 
   private buildActionsDropdown(config: ControlConfig, record: EntityRecord): HTMLElement {

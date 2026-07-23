@@ -45,12 +45,52 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  margin-top: 8px;
 }
 
-.lfs-host-inner .page-info {
-  min-width: 64px;
-  text-align: center;
+.lfs-host-inner .view-pagination .pagination {
+  margin: 0;
+}
+
+.lfs-host-inner .view-pagination .pagination > li > a {
+  cursor: pointer;
+}
+
+.lfs-host-inner .view-pagination .pagination > .disabled > a {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lfs-host-inner th.lfs-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.lfs-host-inner th.lfs-sortable .lfs-sort-label {
+  margin-right: 6px;
+}
+
+.lfs-host-inner th.lfs-sortable .lfs-sort-caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #9aa4b2;
+  opacity: 0.45;
+}
+
+.lfs-host-inner th.lfs-sortable.sorted-asc .lfs-sort-caret {
+  border-top: 0;
+  border-bottom: 5px solid #1b2430;
+  opacity: 1;
+}
+
+.lfs-host-inner th.lfs-sortable.sorted-desc .lfs-sort-caret {
+  border-top: 5px solid #1b2430;
+  opacity: 1;
 }
 
 .lfs-status {

@@ -11,7 +11,7 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 | `targetEntitySetName` | Yes | e.g. `mcshhs_akanames` |
 | `lookupFieldLogicalName` | Yes | Form lookup e.g. `fc_applican` |
 | `filterAttributeLogicalName` | Yes | Subgrid lookup e.g. `fc_contact` |
-| `displayColumns` | Yes | Comma-separated grid columns (optional braces) |
+| `displayColumns` | Yes | **Multiple** (multi-line) comma-separated grid columns |
 | `portalId` | Yes | Website GUID (empty GUID allowed) |
 | `recordId` | Yes | Empty GUID for Insert only |
 | `entityFormId` | Yes | Insert Basic Form GUID |
@@ -24,35 +24,18 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 {fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}
 ```
 
-Also accepts without braces: `mcshhs_akaname, mcshhs_firstname, createdon`.
+Multi-line lists are supported (newlines treated as commas). No 100-character Single Line limit.
 
 | Token | Behavior |
 |-------|----------|
-| Equals `filterAttributeLogicalName` (e.g. `fc_contact`) | Expanded to `_fc_contact_value` FormattedValue for display |
-| `_otherlookup_value` | Other lookups — use this form for FormattedValue |
+| Equals `filterAttributeLogicalName` | Expanded to `_…_value` FormattedValue |
+| `_otherlookup_value` | Other lookups |
 | Plain attribute | Selected and shown as-is |
 
-Web API `$select` / filter / entity set are driven by the maker properties above (any entity).
+List `$filter` is **lookup only** (no `statecode eq 0`). Click column headers to sort (`$orderby`). Pagination uses Power Pages List-style Bootstrap pager (First / Previous / page / Next / Last disabled).
 
-## Create iframe
+## Create / Edit iframe
 
-```text
-/_portal/modal-form-template-path/{portalId}?id={recordId}&entityformid={entityFormId}&{filterAttributeLogicalName}={lookupGuid}
-```
-
-Configure **Associated Table Reference** on the Insert form: Query String Name = `fc_contact` (match `filterAttributeLogicalName`).
-
-## Edit iframe
-
-```text
-/_portal/modal-form-template-path/{portalId}?id={rowRecordId}&entityformid={editEntityFormId}
-```
-
-`id` comes from the grid row, not the maker `recordId` property. No associate query param on Edit.
-
-## UI
-
-- Create button right-aligned; label from `createButtonLabel`.
-- Row actions: dropdown with **Edit** and **Remove Other Name** (delete via Web API).
+Create appends `&{filterAttributeLogicalName}={lookupGuid}`. Edit uses row id + `editEntityFormId` only.
 
 After property changes: remove control → Save/Publish → import → re-add.

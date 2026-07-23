@@ -1,10 +1,9 @@
 import { ControlConfig, EntityRecord, LoadResult } from "../types";
 import {
-  and,
   buildApiUrl,
   buildRecordUrl,
-  eq,
   lookupEq,
+  toODataOrderByField,
   toODataSelectFields,
 } from "./odata/ODataQuery";
 import { PortalApi } from "./PortalApi";
@@ -15,20 +14,20 @@ export class DataService {
   public async loadRecords(
     config: ControlConfig,
     filterGuid: string,
-    pageNumber: number
+    pageNumber: number,
+    sort?: { field: string; direction: "asc" | "desc" }
   ): Promise<LoadResult> {
     const pageSize = Math.max(1, config.pageSize);
     const page = Math.max(1, pageNumber);
     const skip = (page - 1) * pageSize;
     const select = toODataSelectFields(config.displayColumns || []);
+    const orderField = toODataOrderByField(sort?.field || "createdon");
+    const orderDir = sort?.direction === "asc" ? "asc" : "desc";
 
     const url = buildApiUrl(config.targetEntitySetName, {
       select: select.length ? select : undefined,
-      filter: and(
-        lookupEq(config.filterAttributeLogicalName, filterGuid),
-        eq("statecode", 0)
-      ),
-      orderby: [{ field: "createdon", direction: "desc" }],
+      filter: lookupEq(config.filterAttributeLogicalName, filterGuid),
+      orderby: [{ field: orderField, direction: orderDir }],
       top: pageSize,
       skip: skip > 0 ? skip : undefined,
     });

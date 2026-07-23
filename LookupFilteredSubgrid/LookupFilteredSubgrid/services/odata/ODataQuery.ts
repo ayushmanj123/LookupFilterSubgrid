@@ -45,6 +45,15 @@ export function toODataSelectFields(columns: string[]): string[] {
   return out;
 }
 
+/** Strip FormattedValue annotation so $orderby uses the underlying attribute. */
+export function toODataOrderByField(column: string | null | undefined): string {
+  const col = (column || "").trim();
+  if (!col) {
+    return "createdon";
+  }
+  return col.includes("@") ? col.split("@")[0] : col;
+}
+
 function formatLiteral(value: string | number | boolean): string {
   if (typeof value === "string") {
     return `'${value.replace(/'/g, "''")}'`;

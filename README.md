@@ -10,10 +10,10 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 
 ## Download
 
-1. **[LookupFilteredSubgridSolution_1_7_0_0.zip](dist/LookupFilteredSubgridSolution_1_7_0_0.zip)**
+1. **[LookupFilteredSubgridSolution_1_8_0_0.zip](dist/LookupFilteredSubgridSolution_1_8_0_0.zip)**
 2. Remove old control → Save & Publish → Import → re-add **CustomPCF** control.
 
-## Properties (v1.7.0)
+## Properties (v1.8.0)
 
 | Property | Example |
 |----------|---------|
@@ -21,12 +21,14 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 | `targetEntitySetName` | `mcshhs_akanames` |
 | `lookupFieldLogicalName` | `fc_applican` |
 | `filterAttributeLogicalName` | `fc_contact` |
-| `displayColumns` | `{fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}` |
+| `displayColumns` | Multi-line `{fc_contact, name, …}` |
 | `portalId` | website GUID or empty GUID |
-| `recordId` | `00000000-0000-0000-0000-000000000000` (Insert) |
+| `recordId` | empty GUID (Insert) |
 | `entityFormId` | Insert Basic Form GUID |
 | `editEntityFormId` | Edit Basic Form GUID |
 | `createButtonLabel` | e.g. `Add Other Name` |
+
+v1.8.0: no `statecode` filter; column sort; Multiple `displayColumns`; List pagination.
 
 ## Build
 

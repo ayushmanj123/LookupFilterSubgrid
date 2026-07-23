@@ -42,8 +42,9 @@ export interface ParsedDisplayColumns {
 }
 
 /**
- * Parse maker SingleLine.Text like `{fc_contact, name, firstname}` into
+ * Parse maker Multiple/SingleLine text like `{fc_contact, name, firstname}` into
  * grid display keys (lookups expanded to FormattedValue annotation keys).
+ * Newlines are treated as separators so long multi-line lists work.
  */
 export function parseDisplayColumns(
   raw: string | null | undefined,
@@ -56,7 +57,7 @@ export function parseDisplayColumns(
   if (text.endsWith("}")) {
     text = text.slice(0, -1);
   }
-  text = text.trim();
+  text = text.replace(/[\r\n]+/g, ",").trim();
 
   const filterAttr = (filterAttributeLogicalName || "").trim().toLowerCase();
   const tokens = text

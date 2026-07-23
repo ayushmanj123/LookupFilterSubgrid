@@ -31,6 +31,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private filterGuid: string | null = null;
   private pageNumber = 1;
   private hasNextPage = false;
+  private sortColumn = "createdon";
+  private sortDirection: "asc" | "desc" = "desc";
   private records: EntityRecord[] = [];
   private isLoading = false;
   private lastLookupField = "";
@@ -66,6 +68,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         onCreate: () => this.openCreate(),
         onEdit: (record) => this.openEdit(record),
         onDelete: (record) => void this.handleDelete(record),
+        onSort: (column) => void this.handleSort(column),
+        onFirstPage: () => void this.goToPage(1),
         onPrevPage: () => void this.goToPage(this.pageNumber - 1),
         onNextPage: () => void this.goToPage(this.pageNumber + 1),
       });
@@ -242,7 +246,14 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.hasNextPage = false;
       this.grid.setLoading(false);
       this.grid.setError("Demo data mode (localhost) — sample rows only.");
-      this.grid.render(config, this.records, 1, false, "No demo records.");
+      this.grid.render(
+        config,
+        this.records,
+        1,
+        false,
+        this.getSortState(),
+        "No demo records."
+      );
       return;
     }
 
@@ -274,7 +285,11 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       const result = await this.dataService.loadRecords(
         config,
         this.filterGuid,
-        this.pageNumber
+        this.pageNumber,
+        {
+          field: this.sortColumn,
+          direction: this.sortDirection,
+        }
       );
       this.records = result.entities;
       this.hasNextPage = !!(result.hasMore || result.nextLink);
@@ -283,6 +298,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         this.records,
         this.pageNumber,
         this.hasNextPage,
+        this.getSortState(),
         "No related records found."
       );
     } catch (err) {
@@ -290,7 +306,14 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.grid.setError(
         `${message} Check Power Pages Web API site settings and table permissions for "${config.targetEntityLogicalName}".`
       );
-      this.grid.render(config, [], this.pageNumber, false, "Unable to load records.");
+      this.grid.render(
+        config,
+        [],
+        this.pageNumber,
+        false,
+        this.getSortState(),
+        "Unable to load records."
+      );
     } finally {
       this.isLoading = false;
       this.grid.setLoading(false);
@@ -316,6 +339,24 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       config.primaryNameAttribute = parsed.primaryNameAttribute;
     }
     config.filterLookupEntitySetName = "contacts";
+  }
+
+  private getSortState(): { column: string; direction: "asc" | "desc" } {
+    return { column: this.sortColumn, direction: this.sortDirection };
+  }
+
+  private async handleSort(column: string): Promise<void> {
+    if (!column || this.isLoading) {
+      return;
+    }
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = "asc";
+    }
+    this.pageNumber = 1;
+    await this.reload();
   }
 
   private async goToPage(page: number): Promise<void> {

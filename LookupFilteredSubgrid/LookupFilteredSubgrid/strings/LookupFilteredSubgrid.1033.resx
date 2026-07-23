@@ -58,10 +58,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LookupFilteredSubgrid_Display_Key" xml:space="preserve">
-    <value>Lookup Filtered Subgrid 1.7.0</value>
+    <value>Lookup Filtered Subgrid 1.8.0</value>
   </data>
   <data name="LookupFilteredSubgrid_Desc_Key" xml:space="preserve">
-    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.7.0</value>
+    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.8.0</value>
   </data>
   <data name="Value_Display_Key" xml:space="preserve">
     <value>Bound Value</value>
@@ -97,7 +97,7 @@
     <value>Display Columns</value>
   </data>
   <data name="DisplayColumns_Desc_Key" xml:space="preserve">
-    <value>Comma-separated columns for the grid, optional braces. Example: {fc_contact, name, firstname, createdon}. Filter lookup name expands to formatted display; other lookups use _attr_value.</value>
+    <value>Multi-line comma-separated columns for the grid (optional braces). Example: {fc_contact, name, firstname, createdon}. Newlines allowed for long lists. Filter lookup expands to formatted display; other lookups use _attr_value.</value>
   </data>
   <data name="PortalId_Display_Key" xml:space="preserve">
     <value>Portal / Website ID</value>

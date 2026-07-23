@@ -20,6 +20,7 @@ import {
   not,
   or,
   toFilterString,
+  toODataOrderByField,
   toODataSelectFields,
 } from "../LookupFilteredSubgrid/services/odata/ODataQuery";
 
@@ -87,6 +88,16 @@ assert.equal(parsedLookupValue.primaryNameAttribute, "name");
 assert.deepEqual(parseDisplayColumns("  { , , }  ", "fc_contact").displayColumns, []);
 assert.deepEqual(parseDisplayColumns("", "fc_contact").displayColumns, []);
 
+const parsedMultiline = parseDisplayColumns(
+  "{\nfc_contact,\nmcshhs_akaname,\nmcshhs_firstname\n}",
+  "fc_contact"
+);
+assert.deepEqual(parsedMultiline.displayColumns, [
+  `_fc_contact_value${FORMATTED_VALUE_ANNOTATION}`,
+  "mcshhs_akaname",
+  "mcshhs_firstname",
+]);
+
 assert.equal(resolvePortalRecordId(""), EMPTY_GUID);
 assert.equal(resolvePortalRecordId("{11111111-1111-1111-1111-111111111111}"), "11111111-1111-1111-1111-111111111111");
 
@@ -110,13 +121,24 @@ assert.equal(
 assert.equal(normalizeGuid("bad"), null);
 
 const guid = "11111111-1111-1111-1111-111111111111";
-const filter = and(lookupEq("fc_contact", guid), eq("statecode", 0));
+const filter = lookupEq("fc_contact", guid);
 assert.equal(
   toFilterString(filter),
-  "(_fc_contact_value eq 11111111-1111-1111-1111-111111111111) and (statecode eq 0)"
+  "_fc_contact_value eq 11111111-1111-1111-1111-111111111111"
 );
 assert.ok(toFilterString(or(eq("statuscode", 1), eq("statuscode", 2))).includes(" or "));
 assert.equal(toFilterString(not(eq("statecode", 1))), "not (statecode eq 1)");
+assert.equal(
+  toFilterString(and(lookupEq("fc_contact", guid), eq("statecode", 0))),
+  "(_fc_contact_value eq 11111111-1111-1111-1111-111111111111) and (statecode eq 0)"
+);
+
+assert.equal(
+  toODataOrderByField(`_fc_contact_value${FORMATTED_VALUE_ANNOTATION}`),
+  "_fc_contact_value"
+);
+assert.equal(toODataOrderByField("name"), "name");
+assert.equal(toODataOrderByField(""), "createdon");
 
 assert.deepEqual(
   toODataSelectFields([
@@ -144,6 +166,7 @@ assert.ok(
 );
 assert.ok(!query.includes("FormattedValue"));
 assert.ok(query.includes("$filter="));
+assert.ok(!decodeURIComponent(query).includes("statecode eq 0"));
 assert.ok(query.includes("$orderby="));
 assert.ok(query.includes("$top=10"));
 assert.ok(query.includes("$skip=10"));
@@ -152,10 +175,13 @@ assert.ok(!query.toLowerCase().includes("fetchxml"));
 const listUrl = buildApiUrl("mcshhs_akanames", {
   select: toODataSelectFields(baseConfig().displayColumns),
   filter: lookupEq("fc_contact", guid),
+  orderby: [{ field: "name", direction: "asc" }],
   top: 10,
 });
 assert.equal(listUrl.startsWith("/_api/mcshhs_akanames?"), true);
 assert.ok(listUrl.includes("$filter="));
+assert.ok(!decodeURIComponent(listUrl).includes("statecode eq 0"));
+assert.ok(decodeURIComponent(listUrl).includes("$orderby=name asc"));
 
 const recordUrl = buildRecordUrl("mcshhs_akanames", `{${guid}}`, {
   select: ["mcshhs_akaname", "mcshhs_firstname"],
