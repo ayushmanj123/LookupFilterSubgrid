@@ -200,3 +200,52 @@ export function resolvePageSize(raw: number | string | null | undefined): number
   }
   return Math.min(100, Math.floor(n));
 }
+
+/**
+ * Format date/time values for grid display as `7/23/2026 11:11 PM`.
+ * Returns null when the value is not a recognizable date.
+ */
+export function formatDateTimeDisplay(value: unknown): string | null {
+  const date = coerceToDate(value);
+  if (!date) {
+    return null;
+  }
+
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  if (hours === 0) {
+    hours = 12;
+  }
+  const mm = minutes < 10 ? `0${minutes}` : String(minutes);
+  return `${month}/${day}/${year} ${hours}:${mm} ${ampm}`;
+}
+
+function coerceToDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value !== "string") {
+    return null;
+  }
+  const s = value.trim();
+  if (!s) {
+    return null;
+  }
+  // OData / ISO: 2026-07-23T23:11:00Z or with offset / date-only
+  if (/^\d{4}-\d{2}-\d{2}(T|\s|$)/.test(s)) {
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  // Legacy OData: /Date(1721776260000)/
+  const msMatch = /^\/Date\((-?\d+)([+-]\d{4})?\)\/$/.exec(s);
+  if (msMatch) {
+    const d = new Date(Number(msMatch[1]));
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}

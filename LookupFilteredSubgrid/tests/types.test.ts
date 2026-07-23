@@ -8,6 +8,7 @@ import {
   normalizeGuid,
   parseDisplayColumns,
   resolvePageSize,
+  formatDateTimeDisplay,
   resolvePortalRecordId,
   ControlConfig,
 } from "../LookupFilteredSubgrid/types";
@@ -98,6 +99,15 @@ assert.equal(resolvePageSize(-5), 10);
 assert.equal(resolvePageSize(25), 25);
 assert.equal(resolvePageSize(150), 100);
 assert.equal(resolvePageSize("7"), 7);
+
+assert.equal(formatDateTimeDisplay("not-a-date"), null);
+assert.equal(formatDateTimeDisplay(null), null);
+{
+  const local = new Date(2026, 6, 23, 23, 11, 0);
+  assert.equal(formatDateTimeDisplay(local), "7/23/2026 11:11 PM");
+  const morning = new Date(2026, 0, 5, 9, 5, 0);
+  assert.equal(formatDateTimeDisplay(morning), "1/5/2026 9:05 AM");
+}
 
 const parsedMultiline = parseDisplayColumns(
   "{\nfc_contact,\nmcshhs_akaname,\nmcshhs_firstname\n}",

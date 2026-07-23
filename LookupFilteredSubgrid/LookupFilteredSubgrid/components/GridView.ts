@@ -1,4 +1,4 @@
-import { ControlConfig, EntityRecord } from "../types";
+import { ControlConfig, EntityRecord, formatDateTimeDisplay } from "../types";
 
 export interface GridViewCallbacks {
   onEdit: (record: EntityRecord) => void;
@@ -471,6 +471,10 @@ export class GridView {
     }
     if (typeof value === "boolean") {
       return value ? "Yes" : "No";
+    }
+    const formattedDate = formatDateTimeDisplay(value);
+    if (formattedDate !== null) {
+      return formattedDate;
     }
     if (typeof value === "object") {
       try {
