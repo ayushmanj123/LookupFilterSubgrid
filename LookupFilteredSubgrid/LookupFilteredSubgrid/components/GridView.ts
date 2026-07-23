@@ -148,7 +148,8 @@ export class GridView {
     thead.innerHTML = "";
     const headerRow = document.createElement("tr");
 
-    for (const col of config.displayColumns) {
+    for (let i = 0; i < config.displayColumns.length; i++) {
+      const col = config.displayColumns[i];
       const th = document.createElement("th");
       th.scope = "col";
       th.className = "lfs-sortable";
@@ -161,7 +162,11 @@ export class GridView {
 
       const label = document.createElement("span");
       label.className = "lfs-sort-label";
-      label.textContent = this.formatHeader(col);
+      const customLabel = (config.displayColumnLabels || [])[i];
+      label.textContent =
+        customLabel && customLabel.trim()
+          ? customLabel.trim()
+          : this.formatHeader(col);
       th.appendChild(label);
 
       const caret = document.createElement("span");

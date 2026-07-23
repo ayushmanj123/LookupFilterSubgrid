@@ -12,6 +12,7 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 | `lookupFieldLogicalName` | Yes | Form lookup e.g. `fc_applican` |
 | `filterAttributeLogicalName` | Yes | Subgrid lookup e.g. `fc_contact` |
 | `displayColumns` | Yes | **Multiple** (multi-line) comma-separated grid columns |
+| `displayColumnLabels` | No | Header labels in the same order as `displayColumns` |
 | `portalId` | Yes | Website GUID (empty GUID allowed) |
 | `recordId` | Yes | Empty GUID for Insert only |
 | `entityFormId` | Yes | Insert Basic Form GUID |
@@ -27,7 +28,13 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 {fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}
 ```
 
-Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). Column headers sort via `$orderby`. Pagination is left-aligned. Date/time cells render as `7/23/2026 11:11 PM`.
+Optional labels (same order):
+
+```text
+{Contact, AKA Name, First Name, Created On}
+```
+
+If labels are blank or fewer than columns, remaining headers fall back to the logical-name formatter.
 
 ## Actions menu
 

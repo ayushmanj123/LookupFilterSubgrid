@@ -10,10 +10,10 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 
 ## Download
 
-1. **[LookupFilteredSubgridSolution_1_9_3_0.zip](dist/LookupFilteredSubgridSolution_1_9_3_0.zip)**
+1. **[LookupFilteredSubgridSolution_1_9_4_0.zip](dist/LookupFilteredSubgridSolution_1_9_4_0.zip)**
 2. Remove old control → Save & Publish → Import → re-add **CustomPCF** control.
 
-## Properties (v1.9.3)
+## Properties (v1.9.4)
 
 | Property | Example |
 |----------|---------|
@@ -22,6 +22,7 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 | `lookupFieldLogicalName` | `fc_applican` |
 | `filterAttributeLogicalName` | `fc_contact` |
 | `displayColumns` | Multi-line `{fc_contact, name, …}` |
+| `displayColumnLabels` | `{Contact, Name, …}` same order |
 | `portalId` | website GUID or empty GUID |
 | `recordId` | empty GUID (Insert) |
 | `entityFormId` | Insert Basic Form GUID |
@@ -31,7 +32,7 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 | `deleteActionLabel` | e.g. `Remove Other Names` |
 | `pageSize` | e.g. `10` (1–100) |
 
-v1.9.3: date/time columns display as `7/23/2026 11:11 PM` (local time).
+v1.9.4: optional `displayColumnLabels` for grid header text.
 
 ## Build
 

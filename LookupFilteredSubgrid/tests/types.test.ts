@@ -7,6 +7,7 @@ import {
   getMissingConfigFields,
   normalizeGuid,
   parseDisplayColumns,
+  parseDisplayColumnLabels,
   resolvePageSize,
   formatDateTimeDisplay,
   resolvePortalRecordId,
@@ -46,6 +47,7 @@ function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
       "createdon",
       "_fc_contact_value@OData.Community.Display.V1.FormattedValue",
     ],
+    displayColumnLabels: [],
     primaryNameAttribute: "mcshhs_akaname",
     pageSize: 10,
     enableCreate: true,
@@ -99,6 +101,13 @@ assert.equal(resolvePageSize(-5), 10);
 assert.equal(resolvePageSize(25), 25);
 assert.equal(resolvePageSize(150), 100);
 assert.equal(resolvePageSize("7"), 7);
+
+assert.deepEqual(
+  parseDisplayColumnLabels("{Contact, Name, First Name, Created On}"),
+  ["Contact", "Name", "First Name", "Created On"]
+);
+assert.deepEqual(parseDisplayColumnLabels("A, B\nC"), ["A", "B", "C"]);
+assert.deepEqual(parseDisplayColumnLabels(""), []);
 
 assert.equal(formatDateTimeDisplay("not-a-date"), null);
 assert.equal(formatDateTimeDisplay(null), null);

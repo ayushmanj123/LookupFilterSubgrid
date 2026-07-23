@@ -58,10 +58,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LookupFilteredSubgrid_Display_Key" xml:space="preserve">
-    <value>Lookup Filtered Subgrid 1.9.3</value>
+    <value>Lookup Filtered Subgrid 1.9.4</value>
   </data>
   <data name="LookupFilteredSubgrid_Desc_Key" xml:space="preserve">
-    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.9.3</value>
+    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.9.4</value>
   </data>
   <data name="Value_Display_Key" xml:space="preserve">
     <value>Bound Value</value>
@@ -98,6 +98,12 @@
   </data>
   <data name="DisplayColumns_Desc_Key" xml:space="preserve">
     <value>Multi-line comma-separated columns for the grid (optional braces). Example: {fc_contact, name, firstname, createdon}. Newlines allowed for long lists. Filter lookup expands to formatted display; other lookups use _attr_value.</value>
+  </data>
+  <data name="DisplayColumnLabels_Display_Key" xml:space="preserve">
+    <value>Display Column Labels</value>
+  </data>
+  <data name="DisplayColumnLabels_Desc_Key" xml:space="preserve">
+    <value>Optional comma-separated header labels in the same order as Display Columns. Example: Contact, Name, First Name, Created On. If blank or shorter, remaining headers fall back to the logical name.</value>
   </data>
   <data name="PortalId_Display_Key" xml:space="preserve">
     <value>Portal / Website ID</value>

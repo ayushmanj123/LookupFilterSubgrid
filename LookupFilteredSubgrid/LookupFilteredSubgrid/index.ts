@@ -12,6 +12,7 @@ import {
   EntityRecord,
   getMissingConfigFields,
   parseDisplayColumns,
+  parseDisplayColumnLabels,
   resolvePageSize,
   resolvePortalRecordId,
 } from "./types";
@@ -154,6 +155,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       deleteActionLabel: (p.deleteActionLabel.raw || "").trim() || "Remove Other Name",
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: parsedColumns.displayColumns,
+      displayColumnLabels: parseDisplayColumnLabels(p.displayColumnLabels.raw),
       primaryNameAttribute: parsedColumns.primaryNameAttribute,
       pageSize: resolvePageSize(p.pageSize.raw),
       enableCreate: true,

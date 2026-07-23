@@ -24,6 +24,8 @@ export interface ControlConfig {
   filterLookupEntitySetName: string;
   /** Grid columns from maker displayColumns text (parsed). */
   displayColumns: string[];
+  /** Optional header labels aligned with displayColumns order. */
+  displayColumnLabels: string[];
   primaryNameAttribute: string;
   pageSize: number;
   enableCreate: boolean;
@@ -101,6 +103,25 @@ export function parseDisplayColumns(
   }
 
   return { displayColumns, primaryNameAttribute };
+}
+
+/**
+ * Parse optional maker labels like `{Contact, Name, First Name}` (case preserved).
+ * Same comma / brace / newline rules as display columns; empty tokens dropped.
+ */
+export function parseDisplayColumnLabels(raw: string | null | undefined): string[] {
+  let text = (raw || "").trim();
+  if (text.startsWith("{")) {
+    text = text.slice(1);
+  }
+  if (text.endsWith("}")) {
+    text = text.slice(0, -1);
+  }
+  text = text.replace(/[\r\n]+/g, ",").trim();
+  return text
+    .split(",")
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
 }
 
 export function getMissingConfigFields(config: ControlConfig): string[] {
