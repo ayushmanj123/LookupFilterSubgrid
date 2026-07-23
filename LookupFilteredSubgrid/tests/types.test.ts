@@ -7,6 +7,7 @@ import {
   getMissingConfigFields,
   normalizeGuid,
   parseDisplayColumns,
+  resolvePageSize,
   resolvePortalRecordId,
   ControlConfig,
 } from "../LookupFilteredSubgrid/types";
@@ -89,6 +90,14 @@ assert.equal(parsedLookupValue.primaryNameAttribute, "name");
 
 assert.deepEqual(parseDisplayColumns("  { , , }  ", "fc_contact").displayColumns, []);
 assert.deepEqual(parseDisplayColumns("", "fc_contact").displayColumns, []);
+
+assert.equal(resolvePageSize(null), 10);
+assert.equal(resolvePageSize(undefined), 10);
+assert.equal(resolvePageSize(0), 10);
+assert.equal(resolvePageSize(-5), 10);
+assert.equal(resolvePageSize(25), 25);
+assert.equal(resolvePageSize(150), 100);
+assert.equal(resolvePageSize("7"), 7);
 
 const parsedMultiline = parseDisplayColumns(
   "{\nfc_contact,\nmcshhs_akaname,\nmcshhs_firstname\n}",

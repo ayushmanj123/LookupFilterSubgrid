@@ -10,10 +10,10 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 
 ## Download
 
-1. **[LookupFilteredSubgridSolution_1_9_1_0.zip](dist/LookupFilteredSubgridSolution_1_9_1_0.zip)**
+1. **[LookupFilteredSubgridSolution_1_9_2_0.zip](dist/LookupFilteredSubgridSolution_1_9_2_0.zip)**
 2. Remove old control → Save & Publish → Import → re-add **CustomPCF** control.
 
-## Properties (v1.9.1)
+## Properties (v1.9.2)
 
 | Property | Example |
 |----------|---------|
@@ -29,8 +29,9 @@ Power Pages PCF: OData list filtered by a form lookup; Create/Edit via iframe Ba
 | `createButtonLabel` | e.g. `Add Other Name` |
 | `editActionLabel` | e.g. `Edit Other Name` |
 | `deleteActionLabel` | e.g. `Remove Other Names` |
+| `pageSize` | e.g. `10` (1–100) |
 
-v1.9.1: actions menu uses portal List classes (`dropdown action`, `btn-xs`, `fa-chevron-circle-down`, `edit-link` / `delete-link`).
+v1.9.2: configurable records per page; pagination left-aligned.
 
 ## Build
 

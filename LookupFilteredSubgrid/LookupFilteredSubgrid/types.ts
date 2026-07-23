@@ -188,3 +188,15 @@ export function normalizeGuid(value: string | null | undefined): string | null {
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   return guidPattern.test(cleaned) ? cleaned.toLowerCase() : null;
 }
+
+/** Parse maker pageSize; default 10; clamp to 1–100. */
+export function resolvePageSize(raw: number | string | null | undefined): number {
+  const n =
+    typeof raw === "number"
+      ? raw
+      : parseInt(String(raw ?? "").trim(), 10);
+  if (!Number.isFinite(n) || n < 1) {
+    return 10;
+  }
+  return Math.min(100, Math.floor(n));
+}

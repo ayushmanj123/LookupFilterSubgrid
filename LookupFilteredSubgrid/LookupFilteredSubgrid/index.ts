@@ -12,6 +12,7 @@ import {
   EntityRecord,
   getMissingConfigFields,
   parseDisplayColumns,
+  resolvePageSize,
   resolvePortalRecordId,
 } from "./types";
 
@@ -154,7 +155,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       filterLookupEntitySetName: this.config?.filterLookupEntitySetName || "contacts",
       displayColumns: parsedColumns.displayColumns,
       primaryNameAttribute: parsedColumns.primaryNameAttribute,
-      pageSize: 10,
+      pageSize: resolvePageSize(p.pageSize.raw),
       enableCreate: true,
       enableEdit: true,
       enableDelete: true,
@@ -334,6 +335,7 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     if (!config.createButtonLabel) config.createButtonLabel = "Create";
     if (!config.editActionLabel) config.editActionLabel = "Edit";
     if (!config.deleteActionLabel) config.deleteActionLabel = "Remove Other Name";
+    config.pageSize = resolvePageSize(config.pageSize);
     if (!config.displayColumns?.length) {
       const parsed = parseDisplayColumns(
         "{fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}",

@@ -58,10 +58,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LookupFilteredSubgrid_Display_Key" xml:space="preserve">
-    <value>Lookup Filtered Subgrid 1.9.1</value>
+    <value>Lookup Filtered Subgrid 1.9.2</value>
   </data>
   <data name="LookupFilteredSubgrid_Desc_Key" xml:space="preserve">
-    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.9.1</value>
+    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.9.2</value>
   </data>
   <data name="Value_Display_Key" xml:space="preserve">
     <value>Bound Value</value>
@@ -140,5 +140,11 @@
   </data>
   <data name="DeleteActionLabel_Desc_Key" xml:space="preserve">
     <value>Label for the row Delete action (e.g. Remove Other Names). Defaults to Remove Other Name if empty.</value>
+  </data>
+  <data name="PageSize_Display_Key" xml:space="preserve">
+    <value>Records Per Page</value>
+  </data>
+  <data name="PageSize_Desc_Key" xml:space="preserve">
+    <value>Number of records to load per page (1-100). Defaults to 10 if empty or invalid.</value>
   </data>
 </root>

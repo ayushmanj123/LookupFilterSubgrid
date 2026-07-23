@@ -19,6 +19,7 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 | `createButtonLabel` | No | Create button text (default `Create`) |
 | `editActionLabel` | No | Row Edit menu text (default `Edit`) |
 | `deleteActionLabel` | No | Row Delete menu text (default `Remove Other Name`) |
+| `pageSize` | No | Records per page, 1–100 (default `10`) |
 
 ## Display columns
 
@@ -26,7 +27,7 @@ Field-bound PCF: related records filtered by a form lookup. List load uses OData
 {fc_contact, mcshhs_akaname, mcshhs_firstname, createdon}
 ```
 
-Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). Column headers sort via `$orderby`.
+Multi-line lists are supported. List `$filter` is lookup only (no `statecode`). Column headers sort via `$orderby`. Pagination is left-aligned.
 
 ## Actions menu
 
