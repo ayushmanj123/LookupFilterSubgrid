@@ -33,6 +33,8 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
   private filterGuid: string | null = null;
   private pageNumber = 1;
   private hasNextPage = false;
+  /** nextLink returned after loading page N — used to fetch page N+1 (Power Pages has no $skip). */
+  private nextLinkByPage: { [page: number]: string } = {};
   private sortColumn = "createdon";
   private sortDirection: "asc" | "desc" = "desc";
   private records: EntityRecord[] = [];
@@ -189,9 +191,15 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
         return;
       }
       this.filterGuid = guid;
-      this.pageNumber = 1;
+      this.resetPaging();
       void this.reload();
     });
+  }
+
+  private resetPaging(): void {
+    this.pageNumber = 1;
+    this.nextLinkByPage = {};
+    this.hasNextPage = false;
   }
 
   private async ensureMetadata(): Promise<void> {
@@ -287,16 +295,27 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
     this.grid.setLoading(true);
 
     try {
-      const result = await this.dataService.loadRecords(
-        config,
-        this.filterGuid,
-        this.pageNumber,
-        {
+      let pageUrl: string | null = null;
+      if (this.pageNumber > 1) {
+        pageUrl = this.nextLinkByPage[this.pageNumber - 1] || null;
+        if (!pageUrl) {
+          this.resetPaging();
+        }
+      }
+
+      const result = await this.dataService.loadRecords(config, this.filterGuid, {
+        pageUrl,
+        sort: {
           field: this.sortColumn,
           direction: this.sortDirection,
-        }
-      );
+        },
+      });
       this.records = result.entities;
+      if (result.nextLink) {
+        this.nextLinkByPage[this.pageNumber] = result.nextLink;
+      } else {
+        delete this.nextLinkByPage[this.pageNumber];
+      }
       this.hasNextPage = !!(result.hasMore || result.nextLink);
       this.grid.render(
         config,
@@ -363,13 +382,19 @@ export class LookupFilteredSubgrid implements ComponentFramework.StandardControl
       this.sortColumn = column;
       this.sortDirection = "asc";
     }
-    this.pageNumber = 1;
+    this.resetPaging();
     await this.reload();
   }
 
   private async goToPage(page: number): Promise<void> {
     if (page < 1 || this.isLoading) {
       return;
+    }
+    if (page > 1 && !this.nextLinkByPage[page - 1]) {
+      return;
+    }
+    if (page === 1) {
+      this.nextLinkByPage = {};
     }
     this.pageNumber = page;
     await this.reload();

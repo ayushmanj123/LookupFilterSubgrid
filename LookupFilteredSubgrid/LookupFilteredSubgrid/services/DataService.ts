@@ -14,32 +14,37 @@ export class DataService {
   public async loadRecords(
     config: ControlConfig,
     filterGuid: string,
-    pageNumber: number,
-    sort?: { field: string; direction: "asc" | "desc" }
+    options?: {
+      /** Absolute or /_api nextLink from a prior page. If set, used instead of building page 1. */
+      pageUrl?: string | null;
+      sort?: { field: string; direction: "asc" | "desc" };
+    }
   ): Promise<LoadResult> {
     const pageSize = Math.max(1, config.pageSize);
-    const page = Math.max(1, pageNumber);
-    const skip = (page - 1) * pageSize;
     const select = toODataSelectFields(config.displayColumns || []);
-    const orderField = toODataOrderByField(sort?.field || "createdon");
-    const orderDir = sort?.direction === "asc" ? "asc" : "desc";
+    const orderField = toODataOrderByField(options?.sort?.field || "createdon");
+    const orderDir = options?.sort?.direction === "asc" ? "asc" : "desc";
 
-    const url = buildApiUrl(config.targetEntitySetName, {
-      select: select.length ? select : undefined,
-      filter: lookupEq(config.filterAttributeLogicalName, filterGuid),
-      orderby: [{ field: orderField, direction: orderDir }],
-      top: pageSize,
-      skip: skip > 0 ? skip : undefined,
-    });
+    const pageUrl = (options?.pageUrl || "").trim();
+    const url = pageUrl
+      ? toPortalApiPath(pageUrl)
+      : buildApiUrl(config.targetEntitySetName, {
+          select: select.length ? select : undefined,
+          filter: lookupEq(config.filterAttributeLogicalName, filterGuid),
+          orderby: [{ field: orderField, direction: orderDir }],
+          top: pageSize,
+        });
 
     const response = await this.api.get(url);
     const entities = this.extractEntities(response.data).map((e) =>
       this.normalizeEntity(e, config)
     );
+    const nextLink = extractODataNextLink(response.data);
 
     return {
       entities,
-      hasMore: entities.length >= pageSize,
+      nextLink,
+      hasMore: !!nextLink,
     };
   }
 
@@ -208,4 +213,46 @@ export class DataService {
       id: id ? this.stripGuid(String(id)) : undefined,
     };
   }
+}
+
+/** Pull @odata.nextLink from an OData payload. */
+export function extractODataNextLink(data: unknown): string | undefined {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+  const obj = data as Record<string, unknown>;
+  const raw = obj["@odata.nextLink"] ?? obj["odata.nextLink"];
+  if (typeof raw !== "string" || !raw.trim()) {
+    return undefined;
+  }
+  return toPortalApiPath(raw.trim());
+}
+
+/**
+ * Normalize a nextLink (absolute or relative) to a /_api... path for webapi.safeAjax.
+ */
+export function toPortalApiPath(urlOrPath: string): string {
+  const raw = (urlOrPath || "").trim();
+  if (!raw) {
+    return raw;
+  }
+  if (raw.startsWith("/_api")) {
+    return raw;
+  }
+  if (raw.startsWith("_api")) {
+    return `/${raw}`;
+  }
+  try {
+    if (/^https?:\/\//i.test(raw)) {
+      const u = new URL(raw);
+      return `${u.pathname}${u.search}`;
+    }
+  } catch {
+    // fall through
+  }
+  const idx = raw.indexOf("/_api");
+  if (idx >= 0) {
+    return raw.slice(idx);
+  }
+  return raw;
 }

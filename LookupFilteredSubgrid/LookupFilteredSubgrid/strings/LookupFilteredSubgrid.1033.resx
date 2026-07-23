@@ -58,10 +58,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LookupFilteredSubgrid_Display_Key" xml:space="preserve">
-    <value>Lookup Filtered Subgrid 1.9.4</value>
+    <value>Lookup Filtered Subgrid 1.9.5</value>
   </data>
   <data name="LookupFilteredSubgrid_Desc_Key" xml:space="preserve">
-    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.9.4</value>
+    <value>Displays related records filtered by a lookup field on the current Power Pages form, with full CRUD support. 1.9.5</value>
   </data>
   <data name="Value_Display_Key" xml:space="preserve">
     <value>Bound Value</value>

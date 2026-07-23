@@ -26,6 +26,10 @@ import {
   toODataOrderByField,
   toODataSelectFields,
 } from "../LookupFilteredSubgrid/services/odata/ODataQuery";
+import {
+  extractODataNextLink,
+  toPortalApiPath,
+} from "../LookupFilteredSubgrid/services/DataService";
 
 function baseConfig(overrides: Partial<ControlConfig> = {}): ControlConfig {
   return {
@@ -185,7 +189,6 @@ const query = buildODataQueryString({
   filter,
   orderby: [{ field: "createdon", direction: "desc" }],
   top: 10,
-  skip: 10,
 });
 assert.ok(query.startsWith("?"));
 assert.ok(query.includes("$select="));
@@ -199,7 +202,7 @@ assert.ok(query.includes("$filter="));
 assert.ok(!decodeURIComponent(query).includes("statecode eq 0"));
 assert.ok(query.includes("$orderby="));
 assert.ok(query.includes("$top=10"));
-assert.ok(query.includes("$skip=10"));
+assert.ok(!query.includes("$skip="));
 assert.ok(!query.toLowerCase().includes("fetchxml"));
 
 const listUrl = buildApiUrl("mcshhs_akanames", {
@@ -223,5 +226,19 @@ assert.equal(
 
 const demo = createDemoRecords(baseConfig({ useDemoData: true }));
 assert.equal(demo.length, 3);
+
+assert.equal(
+  toPortalApiPath("https://contoso.powerappsportals.com/_api/mcshhs_akanames?$skiptoken=abc"),
+  "/_api/mcshhs_akanames?$skiptoken=abc"
+);
+assert.equal(toPortalApiPath("/_api/foo"), "/_api/foo");
+assert.equal(
+  extractODataNextLink({
+    value: [],
+    "@odata.nextLink": "https://x.example/_api/mcshhs_akanames?$skiptoken=1",
+  }),
+  "/_api/mcshhs_akanames?$skiptoken=1"
+);
+assert.equal(extractODataNextLink({ value: [] }), undefined);
 
 console.log("All tests passed.");
